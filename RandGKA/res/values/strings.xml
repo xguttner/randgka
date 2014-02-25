@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RandGKAApp</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="rand_source">Randomness Source</string>
+    <string name="rand_extractor">Randomness Extractor</string>
+    <string name="source_type">Source type</string>
+    <string name="camera">Camera</string>
+    <string name="microphone">Microphone</string>
+    <string name="source_data_type">Source Data Type</string>
+    <string name="preprocessed">Preprocessed</string>
+    <string name="raw">Raw</string>
+    <string name="source_output_method">Source Output Method</string>
+    <string name="sopByteArray">Byte Array</string>
+    <string name="sopFile">File</string>
+    <string name="min_entropy_data_length">Min-Entropy Data Length</string>
+    <string name="start">Start</string>
+    <string name="generate">Generate</string>
+    <string name="bluetooth_gka">Bluetooth GKA</string>
+    <string name="server">Server</string>
+    <string name="client">Client</string>
+    <string name="connect">Connect</string>
+    <string name="discovered_devices">Discovered Devices</string>
+    <string name="paired_devices">Paired Devices</string>
+    <string name="authentication">Authentication</string>
+    <string name="nfc">NFC</string>
+    <string name="mutual_pin">Mutual PIN</string>
+    <string name="trust_former">Trust Former</string>
+    <string name="authenticate">Authenticate</string>
+    <string name="authentication_pin">Authentication PIN</string>
+    <string name="pin_to_let">PIN To Let</string>
+    <string name="pin_to_fill">PIN To Fill</string>
+    <string name="title_activity_authentication_server">AuthenticationServerActivity</string>
+    <string name="title_activity_gkaprotocol">GKAProtocolActivity</string>
+    <string name="run_protocol">Run Protocol</string>
+    <string name="empty">Empty</string>
+    <string name="title_activity_min_entropy_source">MinEntropySourceActivity</string>
+    <string name="generating_min_entropy_seq">Generating Min-Entropy Sequence</string>
+    <string name="title_activity_rand_extractor">RandExtractorActivity</string>
+    <string name="generating_random_seq">Generating Random Sequence</string>
+    <string name="rand_data_length">Length of Random Data</string>
+    <string name="title_activity_gkaprotocol_random_data">GKAProtocolRandomDataActivity</string>
+    <string name="title_activity_public_key_cryptography_app">PublicKeyCryptographyAppActivity</string>
+    <string name="public_key_cryptography">Public-Key Cryptography</string>
+    <string name="generate_key_pair">Generate Key Pair</string>
+    <string name="my_certificate">My Certificate</string>
+    <string name="title_activity_gkaprotocol_print_key_app">GKAProtocolPrintKeyAppActivity</string>
+
+</resources>

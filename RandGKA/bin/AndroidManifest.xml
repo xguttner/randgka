@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cz.muni.fi.randgkaapp"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="18" />
+
+    <uses-feature android:name="android.hardware.camera" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.MinEntropySourceAppActivity"
+            android:label="@string/rand_source" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.RandExtractorAppActivity"
+            android:label="@string/rand_extractor" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolConnectionAppActivity"
+            android:label="@string/bluetooth_gka" >
+        </activity>
+        <!--
+        <activity
+            android:name="cz.muni.fi.androidrandextr.AuthenticationClientActivity"
+            android:label="@string/authentication" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.androidrandextr.AuthenticationPINActivity"
+            android:label="@string/authentication_pin" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.androidrandextr.AuthenticationServerActivity"
+            android:label="@string/title_activity_authentication_server" >
+        </activity>
+        -->
+        <service
+            android:name="cz.muni.fi.randgka.randgkamiddle.ConnectionService"
+            android:exported="false" >
+        </service>
+
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolStartAppActivity"
+            android:label="@string/title_activity_gkaprotocol" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkamiddle.MinEntropySourceActivity"
+            android:label="@string/title_activity_min_entropy_source" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkamiddle.RandExtractorActivity"
+            android:label="@string/title_activity_rand_extractor" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkamiddle.GKAProtocolRunActivity"
+            android:label="@string/title_activity_gkaprotocol_random_data" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.PublicKeyCryptographyAppActivity"
+            android:label="@string/title_activity_public_key_cryptography_app" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgkaapp.GKAProtocolPrintKeyAppActivity"
+            android:label="@string/title_activity_gkaprotocol_print_key_app" >
+        </activity>
+    </application>
+
+</manifest>
