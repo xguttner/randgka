@@ -84,6 +84,10 @@
             android:name="cz.muni.fi.randgkaapp.GKAProtocolPrintKeyAppActivity"
             android:label="@string/title_activity_gkaprotocol_print_key_app" >
         </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.RandExtractor2AppActivity"
+            android:label="@string/title_activity_rand_extractor2_app" >
+        </activity>
     </application>
 
 </manifest>

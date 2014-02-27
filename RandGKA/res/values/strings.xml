@@ -47,5 +47,6 @@
     <string name="generate_key_pair">Generate Key Pair</string>
     <string name="my_certificate">My Certificate</string>
     <string name="title_activity_gkaprotocol_print_key_app">GKAProtocolPrintKeyAppActivity</string>
+    <string name="title_activity_rand_extractor2_app">RandExtractor2AppActivity</string>
 
 </resources>

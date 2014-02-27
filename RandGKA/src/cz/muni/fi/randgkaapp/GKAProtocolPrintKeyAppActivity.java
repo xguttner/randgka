@@ -2,6 +2,7 @@ package cz.muni.fi.randgkaapp;
 
 import java.math.BigInteger;
 
+import cz.muni.fi.randgka.provider.random.UHRandExtractor;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
@@ -26,5 +27,5 @@ public class GKAProtocolPrintKeyAppActivity extends Activity {
 		getMenuInflater().inflate(R.menu.gkaprotocol_print_key_app, menu);
 		return true;
 	}
-
+	
 }

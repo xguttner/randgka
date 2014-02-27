@@ -32,6 +32,11 @@ public class MainActivity extends Activity {
 		startActivity(moving);
 	}
 	
+	public void moveToRandExtractor2AppActivity(View view) {
+		Intent moving = new Intent(this, RandExtractor2AppActivity.class);
+		startActivity(moving);
+	}
+	
 	public void moveToGKAProtocolAppActivity(View view) {
 		Intent moving = new Intent(this, GKAProtocolConnectionAppActivity.class);
 		startActivity(moving);

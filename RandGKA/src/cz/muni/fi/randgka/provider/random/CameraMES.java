@@ -1,11 +1,14 @@
-package cz.muni.fi.randgka.library;
+package cz.muni.fi.randgka.provider.random;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+
 import cz.muni.fi.androidrandextr.setrt.MinEntropyApproximationRT;
+import cz.muni.fi.randgka.library.ByteSequence;
+import cz.muni.fi.randgka.library.GainMode;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -178,7 +181,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 			if (sampleNumber > currentSample) {
 				if (this.preprocessingFlag) data = this.preprocess(new ByteSequence(newData, this.bytesPerSample*8));
 				else data = new ByteSequence(newData, this.bytesPerSample*8);
-				
+				Log.d("data",data.toString());
 				if (this.store) this.fos.write(data.getSequence());
 				else this.sourceData.add(data);
 				

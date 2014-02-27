@@ -46,4 +46,14 @@
         android:text="@string/public_key_cryptography"
         android:onClick="moveToPublicKeyCryptographyAppActivity" />
 
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/button4"
+        android:text="Button"
+        android:onClick="moveToRandExtractor2AppActivity" />
+
 </RelativeLayout>

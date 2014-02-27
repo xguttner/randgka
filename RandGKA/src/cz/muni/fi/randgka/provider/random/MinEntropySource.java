@@ -1,8 +1,10 @@
-package cz.muni.fi.randgka.library;
+package cz.muni.fi.randgka.provider.random;
 
 import java.io.File;
 
 import cz.muni.fi.androidrandextr.setrt.MinEntropyApproximationRT;
+import cz.muni.fi.randgka.library.ByteSequence;
+import cz.muni.fi.randgka.library.GainMode;
 
 /**
  * 

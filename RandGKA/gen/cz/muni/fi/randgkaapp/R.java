@@ -24,36 +24,38 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f09001d;
+        public static final int action_settings=0x7f09001f;
         public static final int button1=0x7f090004;
         public static final int button2=0x7f090009;
         public static final int button3=0x7f09000a;
         public static final int button4=0x7f09000d;
-        public static final int certificate_input=0x7f090011;
+        public static final int button5=0x7f090010;
+        public static final int certificate_input=0x7f090012;
         public static final int editText1=0x7f090006;
         public static final int editText2=0x7f090008;
         public static final int generated_key_input=0x7f09000f;
         public static final int protocol_participants=0x7f09000e;
         public static final int radio0=0x7f090001;
         public static final int radio1=0x7f090002;
-        public static final int radio1_0=0x7f090013;
-        public static final int radio1_1=0x7f090014;
+        public static final int radio1_0=0x7f090015;
+        public static final int radio1_1=0x7f090016;
         public static final int radio2=0x7f090003;
-        public static final int radio2_0=0x7f090016;
-        public static final int radio2_1=0x7f090017;
-        public static final int radio3_0=0x7f09001a;
-        public static final int radio3_1=0x7f09001b;
+        public static final int radio2_0=0x7f090018;
+        public static final int radio2_1=0x7f090019;
+        public static final int radio3_0=0x7f09001c;
+        public static final int radio3_1=0x7f09001d;
         public static final int radioGroup1=0x7f090000;
-        public static final int radioGroup2=0x7f090015;
-        public static final int radioGroup3=0x7f090019;
-        public static final int randDataLength=0x7f090012;
+        public static final int radioGroup2=0x7f090017;
+        public static final int radioGroup3=0x7f09001b;
+        public static final int randDataLength=0x7f090013;
         public static final int spinner1=0x7f09000b;
         public static final int spinner2=0x7f09000c;
-        public static final int surfaceView=0x7f090010;
+        public static final int surfaceView=0x7f090011;
+        public static final int surfaceView1=0x7f090014;
         public static final int textView1=0x7f090005;
         public static final int textView2=0x7f090007;
-        public static final int textView3=0x7f090018;
-        public static final int textView4=0x7f09001c;
+        public static final int textView3=0x7f09001a;
+        public static final int textView4=0x7f09001e;
     }
     public static final class layout {
         public static final int activity_authentication=0x7f030000;
@@ -67,8 +69,9 @@ public final class R {
         public static final int activity_min_entropy_source=0x7f030008;
         public static final int activity_public_key_cryptography_app=0x7f030009;
         public static final int activity_rand_extractor=0x7f03000a;
-        public static final int activity_rand_source=0x7f03000b;
-        public static final int activity_random_extractor=0x7f03000c;
+        public static final int activity_rand_extractor2_app=0x7f03000b;
+        public static final int activity_rand_source=0x7f03000c;
+        public static final int activity_random_extractor=0x7f03000d;
     }
     public static final class menu {
         public static final int authentication=0x7f080000;
@@ -82,7 +85,8 @@ public final class R {
         public static final int min_entropy_source=0x7f080008;
         public static final int public_key_cryptography_app=0x7f080009;
         public static final int rand_extractor=0x7f08000a;
-        public static final int rand_source=0x7f08000b;
+        public static final int rand_extractor2_app=0x7f08000b;
+        public static final int rand_source=0x7f08000c;
     }
     public static final class raw {
         public static final int seed=0x7f040000;
@@ -133,6 +137,7 @@ public final class R {
         public static final int title_activity_min_entropy_source=0x7f060023;
         public static final int title_activity_public_key_cryptography_app=0x7f060029;
         public static final int title_activity_rand_extractor=0x7f060025;
+        public static final int title_activity_rand_extractor2_app=0x7f06002e;
         public static final int trust_former=0x7f06001a;
     }
     public static final class style {
