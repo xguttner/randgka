@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
-import cz.muni.fi.randgka.random.MinEntropySource;
+import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 
 /**
  * 

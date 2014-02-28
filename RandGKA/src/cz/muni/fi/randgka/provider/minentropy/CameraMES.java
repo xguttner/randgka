@@ -1,15 +1,15 @@
-package cz.muni.fi.randgka.random;
+package cz.muni.fi.randgka.provider.minentropy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import cz.muni.fi.androidrandextr.setrt.MinEntropyApproximationRT;
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.GainMode;
-import cz.muni.fi.randgka.randgkaapp.RandExtractor2AppActivity;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -22,105 +22,98 @@ import android.view.SurfaceView;
 
 public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 
-	private static final int SQUARE_MATRIX_WIDTH = 20;
-	private GainMode gm;
-	private MinEntropyApproximationRT approx;
 	private Camera camera;
-	private SurfaceView surface;
-	private byte[] imageBuffer;
-	private static final int PREVIEW_HEIGHT = 240, PREVIEW_WIDTH = 320, SQUARE_SIDE = 16, MAXIMUM_FPS = 16000;
 	private Parameters cameraSettings;
 	private boolean surfaceReady, cameraReady;
+	private Looper cameraLooper;
+	private SurfaceView surfaceView;
+	
+	private byte[] imageBuffer;
+	private static final int SQUARE_MATRIX_WIDTH = 20;
+	private static final int PREVIEW_HEIGHT = 240, PREVIEW_WIDTH = 320, SQUARE_SIDE = 16, MAXIMUM_FPS = 16000;
 	private long sampleNumber, currentSample;
 	private FileOutputStream fos;
 	private boolean store;
 	private ByteSequence sourceData;
 	private CountDownLatch countDownLatch;
-	private Looper cameraLooper;
 	private boolean preprocessingFlag;
 	private static final int PREPROCESSED_SAMPLE_LENGTH = 4;
 	private int bytesPerSample;
 	private int currentShift = 0;
 
-	public class CameraThread implements Runnable {
-
+	/**
+	 * CameraThread enables to run actions on camera in separate thread
+	 */
+	private class CameraThread implements Runnable {
 		@Override
 		public void run() {
 			Looper.prepare();
-			
 			cameraLooper = Looper.myLooper();
-			//cameraLooper = Looper.myLooper();
 			camera = Camera.open();
 			countDownLatch.countDown();
-			
 			Looper.loop();
 		}
-		
 	}
 	
-	public CameraMES(SurfaceView surface) {
-		//this.surface = surface;
+	/**
+	 * Non-parametric constructor
+	 */
+	public CameraMES() {}
+
+	/**
+	 * MinEntropySource implemented method
+	 */
+	public boolean initialize() {
 		
-		surface = RandExtractor2AppActivity.getSurfaceView();
-		
-		this.initialize(surface);
-	}
-	
-	public void initialize() {}
-	
-	public void initialize(SurfaceView surface) {
+		//wait for camera to open
 		countDownLatch = new CountDownLatch(1);
-		
 		Thread cameraThread = new Thread(new CameraThread());
         cameraThread.start();
-        
         try {
 			countDownLatch.await();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
+        //set preview parameters
 		cameraSettings = camera.getParameters();
 		cameraSettings.setPreviewFormat(ImageFormat.NV21);
 		cameraSettings.setPreviewSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
-//		List<int[]> rates = cameraSettings.getSupportedPreviewFpsRange();
-//		if (rates != null && rates.size() > 0) {
-//			int[] fps = rates.get(0);
-//			for (int[] rate : rates) {
-//				if (rate[1] <= MAXIMUM_FPS) fps = rate;
-//			}
-//			cameraSettings.setPreviewFpsRange(fps[0], fps[1]);
-//		}
+		List<int[]> rates = cameraSettings.getSupportedPreviewFpsRange();
+		if (rates != null && rates.size() > 0) {
+			int[] fps = rates.get(0);
+			for (int[] rate : rates) {
+				if (rate[1] <= MAXIMUM_FPS) fps = rate;
+			}
+			cameraSettings.setPreviewFpsRange(fps[0], fps[1]);
+		}
 		camera.setParameters(cameraSettings);
-		this.bytesPerSample = ImageFormat.getBitsPerPixel(cameraSettings.getPreviewFormat()) * PREVIEW_WIDTH * PREVIEW_HEIGHT / 8;
+		
+		// set callbackbuffer
+		bytesPerSample = ImageFormat.getBitsPerPixel(cameraSettings.getPreviewFormat()) * PREVIEW_WIDTH * PREVIEW_HEIGHT / 8;
 		imageBuffer = new byte[this.bytesPerSample];
 		camera.addCallbackBuffer(imageBuffer);
 		
 //		if(rotation==Surface.ROTATION_0) camera.setDisplayOrientation(90);
 //		if(rotation==Surface.ROTATION_90) camera.setDisplayOrientation(0);
 //		if(rotation==Surface.ROTATION_270) camera.setDisplayOrientation(180);
-	 
 		camera.setDisplayOrientation(0);
 
-		this.sampleNumber = -1;
-		this.currentSample = 0;
-		this.preprocessingFlag = true;
+		// set initial values
+		sampleNumber = -1;
+		currentSample = 0;
+		preprocessingFlag = true;
 		
-		this.setDisplaySurface(surface);
+		// get surfaceView
+		surfaceView = SurfaceViewProvider.getSurfaceView();
+		this.setDisplaySurface(surfaceView);
 		this.startPreview();
+		
+		return cameraReady && surfaceReady;
 	}
-
-	public void setGainMode(GainMode gm) {
-		this.gm = gm;
-	}
-
-	public void setApprox(MinEntropyApproximationRT approx) {
-		this.approx = approx;
-	}
-
-	public void setDisplaySurface(SurfaceView surface) {
-		this.surface = surface;
+	
+	private void setDisplaySurface(SurfaceView surface) {
+		this.surfaceView = surface;
 		surface.getHolder().addCallback(this);
 	}
 
@@ -128,7 +121,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 		if (surfaceReady) {
 			try {
 				Log.d("CameraHandler", "camera from start Preview");
-				camera.setPreviewDisplay(surface.getHolder());
+				camera.setPreviewDisplay(surfaceView.getHolder());
 				Log.d("threadstartPreview", "id: "
 						+ Thread.currentThread().getId());
 				camera.setPreviewCallbackWithBuffer(this);
@@ -155,7 +148,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 
 	public void surfaceCreated(SurfaceHolder holder) {
 		try {
-			if (camera == null) initialize(surface);
+			if (camera == null) initialize();
 			camera.setPreviewDisplay(holder);
 			surfaceReady = true;
 			if (cameraReady) {
@@ -282,5 +275,10 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 	public int getBytesPerSample(boolean usingPreprocessing) {
 		if (usingPreprocessing) return PREPROCESSED_SAMPLE_LENGTH;
 		else return bytesPerSample;
+	}
+
+	@Override
+	public ByteSequence getMinEntropyData(int minEntropyDataLength) {
+		return this.getSourceData(minEntropyDataLength, null, true);
 	}
 }

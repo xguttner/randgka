@@ -1,14 +1,14 @@
-package cz.muni.fi.randgka.provider;
+package cz.muni.fi.randgka.provider.random;
 
 import java.security.SecureRandomSpi;
 
 import android.app.Activity;
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
-import cz.muni.fi.randgka.random.MinEntropySource;
-import cz.muni.fi.randgka.random.RandExtractor;
+import cz.muni.fi.randgka.provider.minentropy.CameraMES;
+import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 
-public final class UHRandExtractorSpi extends SecureRandomSpi implements RandExtractor {
+public final class UHRandExtractor extends SecureRandomSpi implements RandExtractor {
 
 	/**
 	 * 
@@ -22,11 +22,13 @@ public final class UHRandExtractorSpi extends SecureRandomSpi implements RandExt
 	private static final int seedLength = 839;
 	private ByteSequence seed;
 	
-	public UHRandExtractorSpi() {}
+	public UHRandExtractor() {
+		this.mes = new CameraMES();
+	}
 	
 	public void initialize(MinEntropySource mes, ByteSequence seed) {
 		this.mes = mes;
-		this.seed = seed;
+		this.seed = new ByteSequence(new byte[210], 839);
 	}
 	
 	@Override

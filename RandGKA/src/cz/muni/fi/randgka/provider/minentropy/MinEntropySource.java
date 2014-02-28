@@ -1,10 +1,7 @@
-package cz.muni.fi.randgka.random;
+package cz.muni.fi.randgka.provider.minentropy;
 
 import java.io.File;
-
-import cz.muni.fi.androidrandextr.setrt.MinEntropyApproximationRT;
 import cz.muni.fi.randgka.library.ByteSequence;
-import cz.muni.fi.randgka.library.GainMode;
 
 /**
  * 
@@ -16,20 +13,10 @@ public interface MinEntropySource {
 	
 	/**
 	 * Initialization of the source
-	 */
-	public void initialize();
-	
-	/**
 	 * 
-	 * @param gm sets the mode of gaining the output sequence: SAFE - predetermined process of gaining the high min-entropy distribution, MAXIMAL - autosetting the preprocessing using MinEntropyApproximationRT
+	 * @return true if the source is able to properly generate min-entropy sequences, false otherwise
 	 */
-	public void setGainMode(GainMode gm);
-
-	/**
-	 * 
-	 * @param approx used for approximating the min-entropy for the last period of time
-	 */
-	public void setApprox(MinEntropyApproximationRT approx);
+	public boolean initialize();
 	
 	/**
 	 * 
@@ -43,9 +30,16 @@ public interface MinEntropySource {
 	 * 
 	 * @param minEntropyDataLength length of the data wanted to gain
 	 * @param storage - file for storing the data, if null, function returns the data directly
-	 * @return the RandSequence of the preprocessed data or null if the data should be stored in the given file
+	 * @return the ByteSequence of the preprocessed data or null if the data should be stored in the given file
 	 */
 	public ByteSequence getPreprocessedSourceData(int minEntropyDataLength, File storage);
+	
+	/**
+	 * 
+	 * @param minEntropyDataLength length of the data to gain
+	 * @return the ByteSequence of the preprocessed data
+	 */
+	public ByteSequence getMinEntropyData(int minEntropyDataLength);
 	
 	/**
 	 * @param usingPreprocessing
