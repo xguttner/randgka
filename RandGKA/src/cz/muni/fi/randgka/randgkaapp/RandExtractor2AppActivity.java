@@ -10,10 +10,11 @@ import java.security.SecureRandom;
 import java.security.Security;
 
 import cz.muni.fi.randgka.library.ByteSequence;
-import cz.muni.fi.randgka.library.CameraMES;
-import cz.muni.fi.randgka.library.MinEntropySource;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
+import cz.muni.fi.randgka.provider.minentropy.CameraMES;
+import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
+import cz.muni.fi.randgka.provider.minentropy.SurfaceViewProvider;
 import cz.muni.fi.randgka.provider.random.UHRandExtractor;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.view.View;
 public class RandExtractor2AppActivity extends Activity {
 
 	private MinEntropySource source;
+	private SecureRandom sr;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +45,17 @@ public class RandExtractor2AppActivity extends Activity {
         SurfaceHolder holder=surface.getHolder();
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
-		source = new CameraMES(surface);
-
+        SurfaceViewProvider.setSurfaceView(surface);
+        
+		//source = new CameraMES();
+        Provider pr = new RandGKAProvider();
+        try {
+			sr = SecureRandom.getInstance("UHRandExtractor", pr);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Log.d("not", "found");
+		}
 	}
 
 	@Override
@@ -55,6 +66,15 @@ public class RandExtractor2AppActivity extends Activity {
 	}
 	
 	public void extract(View view) {
+		 /*Provider pr = new RandGKAProvider();
+	        try {
+				sr = SecureRandom.getInstance("UHRandExtractor", pr);
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				Log.d("not", "found");
+			}*/
+		
 		int minEntropySequenceLength = 839;
 		DataInputStream dis = new DataInputStream(getResources().openRawResource(R.raw.seed));
 		ByteSequence seed = null;
@@ -71,10 +91,12 @@ public class RandExtractor2AppActivity extends Activity {
 		
 		byte [] bytes = new byte[100];
 		
-		UHRandExtractor re = new UHRandExtractor();
+		sr.nextBytes(bytes);
+		
+		/*UHRandExtractor re = new UHRandExtractor();
 		re.initialize(source, seed);
-		re.nextBytes(bytes);
-		Log.d("bytes", new String(bytes));
+		re.nextBytes(bytes);*/
+		//Log.d("bytes", new String(bytes));
     }
 	
 }

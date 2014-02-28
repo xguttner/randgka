@@ -1,7 +1,7 @@
 package cz.muni.fi.randgka.provider.random;
 
 import cz.muni.fi.randgka.library.ByteSequence;
-import cz.muni.fi.randgka.library.MinEntropySource;
+import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 
 public interface RandExtractor {
 	

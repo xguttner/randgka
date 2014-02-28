@@ -3,9 +3,9 @@ package cz.muni.fi.randgka.randgkamiddle;
 import java.io.File;
 
 import cz.muni.fi.randgka.library.ByteSequence;
-import cz.muni.fi.randgka.library.CameraMES;
-import cz.muni.fi.randgka.library.MinEntropySource;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
+import cz.muni.fi.randgka.provider.minentropy.CameraMES;
+import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.os.Environment;
@@ -58,7 +58,7 @@ public class MinEntropySourceActivity extends Activity {
 	        SurfaceHolder holder=surface.getHolder();
 	        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	        
-			source = new CameraMES(surface);
+			source = new CameraMES();
 			break;
 		}
 		 
