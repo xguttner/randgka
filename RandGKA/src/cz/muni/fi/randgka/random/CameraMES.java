@@ -1,4 +1,4 @@
-package cz.muni.fi.randgka.provider.random;
+package cz.muni.fi.randgka.random;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import cz.muni.fi.androidrandextr.setrt.MinEntropyApproximationRT;
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.GainMode;
+import cz.muni.fi.randgka.randgkaapp.RandExtractor2AppActivity;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -58,7 +59,9 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback {
 	}
 	
 	public CameraMES(SurfaceView surface) {
-		this.surface = surface;
+		//this.surface = surface;
+		
+		surface = RandExtractor2AppActivity.getSurfaceView();
 		
 		this.initialize(surface);
 	}

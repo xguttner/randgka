@@ -1,4 +1,4 @@
-package cz.muni.fi.randgka.provider.random;
+package cz.muni.fi.randgka.random;
 
 import java.io.File;
 

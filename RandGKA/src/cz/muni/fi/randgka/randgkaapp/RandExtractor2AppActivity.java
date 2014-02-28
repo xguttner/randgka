@@ -10,11 +10,11 @@ import java.security.SecureRandom;
 import java.security.Security;
 
 import cz.muni.fi.randgka.library.ByteSequence;
-import cz.muni.fi.randgka.library.CameraMES;
-import cz.muni.fi.randgka.library.MinEntropySource;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
-import cz.muni.fi.randgka.provider.random.UHRandExtractor;
+import cz.muni.fi.randgka.random.CameraMES;
+import cz.muni.fi.randgka.random.MinEntropySource;
+import cz.muni.fi.randgka.random.UHRandExtractor;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,13 +28,14 @@ import android.view.View;
 public class RandExtractor2AppActivity extends Activity {
 
 	private MinEntropySource source;
+	private static SurfaceView surface;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_rand_extractor2_app);
         
-        SurfaceView surface = null;
+        surface = null;
         
         MinEntropySourceType minEntropySourceType = (MinEntropySourceType)getIntent().getSerializableExtra("minEntropySourceType");
 		String targetFileName = getIntent().getStringExtra("targetFileName");
@@ -52,6 +53,10 @@ public class RandExtractor2AppActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.rand_extractor2_app, menu);
 		return true;
+	}
+	
+	public static SurfaceView getSurfaceView() {
+		return surface;
 	}
 	
 	public void extract(View view) {

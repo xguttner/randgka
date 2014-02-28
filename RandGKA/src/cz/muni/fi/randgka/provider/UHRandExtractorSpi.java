@@ -1,11 +1,12 @@
-package cz.muni.fi.randgka.provider.random;
+package cz.muni.fi.randgka.provider;
 
 import java.security.SecureRandomSpi;
 
 import android.app.Activity;
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
-import cz.muni.fi.randgka.library.MinEntropySource;
+import cz.muni.fi.randgka.random.MinEntropySource;
+import cz.muni.fi.randgka.random.RandExtractor;
 
 public final class UHRandExtractorSpi extends SecureRandomSpi implements RandExtractor {
 

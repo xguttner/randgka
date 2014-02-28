@@ -1,11 +1,13 @@
-package cz.muni.fi.randgka.provider.random;
+package cz.muni.fi.randgka.random;
 
 import java.security.SecureRandom;
 
+import android.content.Context;
 import android.util.Log;
+import android.view.SurfaceView;
 import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
-import cz.muni.fi.randgka.library.MinEntropySource;
+import cz.muni.fi.randgka.randgkaapp.RandExtractor2AppActivity;
 
 public class UHRandExtractor extends SecureRandom implements RandExtractor {
 	
@@ -18,6 +20,7 @@ public class UHRandExtractor extends SecureRandom implements RandExtractor {
 	private static final int trueRandomSequenceLength = 629;
 	private static final int seedLength = 839;
 	private ByteSequence seed;
+	private Context c;
 	
 	private MinEntropySource mes;
 	
