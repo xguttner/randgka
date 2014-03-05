@@ -2,7 +2,7 @@ package cz.muni.fi.randgka.library;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothFeatures;
 import cz.muni.fi.randgka.bluetoothgka.BluetoothGKAParticipants;
-import cz.muni.fi.randgka.library.Constants;
+import cz.muni.fi.randgka.tools.Constants;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

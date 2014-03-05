@@ -1,4 +1,4 @@
-package cz.muni.fi.randgka.library;
+package cz.muni.fi.randgka.tools;
 
 public final class Constants {
 	

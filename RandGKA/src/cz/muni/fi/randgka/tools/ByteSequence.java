@@ -3,7 +3,6 @@ package cz.muni.fi.randgka.tools;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-import cz.muni.fi.randgka.library.LengthsNotEqualException;
 import android.util.Log;
 
 public class ByteSequence implements Serializable {

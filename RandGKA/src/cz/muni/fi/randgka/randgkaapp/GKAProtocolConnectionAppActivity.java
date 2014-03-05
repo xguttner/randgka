@@ -3,9 +3,9 @@ package cz.muni.fi.randgka.randgkaapp;
 import java.util.Set;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
-import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.DiscoveryBroadcastReceiver;
 import cz.muni.fi.randgka.library.ProtocolBroadcastReceiver;
+import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;

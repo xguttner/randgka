@@ -5,11 +5,11 @@ import java.security.Provider;
 import java.security.SecureRandom;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
-import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.ProtocolBroadcastReceiver;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
+import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
