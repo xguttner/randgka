@@ -12,6 +12,7 @@ public final class RandGKAProvider extends Provider {
 
 	public RandGKAProvider() {
 		super(name, version, info);
+		
 		put("SecureRandom.UHRandExtractor", "cz.muni.fi.randgka.provider.random.UHRandExtractor");
 	}
 	

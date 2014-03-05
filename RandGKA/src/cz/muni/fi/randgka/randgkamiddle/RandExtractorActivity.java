@@ -3,12 +3,12 @@ package cz.muni.fi.randgka.randgkamiddle;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
 import cz.muni.fi.randgka.library.RandExtractor;
 import cz.muni.fi.randgka.library.UniversalHashFuncRE;
+import cz.muni.fi.randgka.tools.ByteSequence;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;

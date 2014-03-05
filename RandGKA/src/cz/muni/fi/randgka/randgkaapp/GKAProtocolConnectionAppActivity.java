@@ -2,10 +2,10 @@ package cz.muni.fi.randgka.randgkaapp;
 
 import java.util.Set;
 
+import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.DiscoveryBroadcastReceiver;
 import cz.muni.fi.randgka.library.ProtocolBroadcastReceiver;
-import cz.muni.fi.randgka.randgkamiddle.ConnectionService;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
@@ -13,7 +13,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -93,8 +92,8 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 		
 		// make device discoverable
 		startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_DISCOVERABLE_BT);
-	
-		Intent bpsIntent = new Intent(this, ConnectionService.class);
+		
+		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
 		bpsIntent.setAction(Constants.SERVER_START);
 		startService(bpsIntent);
 		/*try {
@@ -103,7 +102,6 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-		
 		
 	}
 	
@@ -127,7 +125,7 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 		
 		// connect
 		//bluetoothCommunication.connectToDevice(bluetoothDevice, view.getContext());
-		Intent bpsIntent = new Intent(this, ConnectionService.class);
+		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
 		bpsIntent.setAction(Constants.CONNECT_TO_DEVICE);
 		bpsIntent.putExtra("bluetoothDevice", bluetoothDevice);
 		startService(bpsIntent);

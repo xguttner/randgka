@@ -3,9 +3,9 @@ package cz.muni.fi.randgka.library;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
+import cz.muni.fi.randgka.tools.ByteSequence;
 
 /**
  * 

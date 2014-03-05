@@ -36,5 +36,12 @@
         android:layout_below="@+id/protocol_participants"
         android:onClick="runProtocol"
         android:text="@string/run_protocol" />
+
+    <SurfaceView
+        android:id="@+id/surfaceView1"
+        android:layout_alignLeft="@+id/generated_key_input"
+        android:layout_below="@+id/generated_key_input"
+        android:layout_width="1dp"
+        android:layout_height="1dp" />
     
 </RelativeLayout>

@@ -1,10 +1,11 @@
 package cz.muni.fi.randgka.randgkaapp;
 
 import java.io.IOException;
-import cz.muni.fi.randgka.library.ByteSequence;
+
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
 import cz.muni.fi.randgka.randgkamiddle.MinEntropySourceActivity;
+import cz.muni.fi.randgka.tools.ByteSequence;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;

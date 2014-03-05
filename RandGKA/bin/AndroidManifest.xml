@@ -56,7 +56,7 @@
         </activity>
         -->
         <service
-            android:name="cz.muni.fi.randgka.randgkamiddle.ConnectionService"
+            android:name="cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService"
             android:exported="false" >
         </service>
 

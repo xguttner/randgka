@@ -4,9 +4,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import android.util.Log;
-import cz.muni.fi.randgka.library.ByteSequence;
 import cz.muni.fi.randgka.library.LengthsNotEqualException;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
+import cz.muni.fi.randgka.tools.ByteSequence;
 
 public class UniversalHashFuncRE implements RandExtractor {
 
@@ -39,7 +39,7 @@ public class UniversalHashFuncRE implements RandExtractor {
 		ByteSequence actualSequence = null;
 		ByteSequence sourceSequence = null;
 		for (int j = 0; j < (int)(length/trueRandomSequenceLength)+((length%trueRandomSequenceLength > 0)?1:0); j++) {
-			sourceSequence = this.randSource.getPreprocessedSourceData((int)(minEntropySequenceLength/randSource.getBytesPerSample(true) + ((minEntropySequenceLength%randSource.getBytesPerSample(true) > 0)?1:0)), null);
+			sourceSequence = this.randSource.getPreprocessedSourceData((int)(minEntropySequenceLength/randSource.getBitsPerSample(true) + ((minEntropySequenceLength%randSource.getBitsPerSample(true) > 0)?1:0)), null);
 			sourceSequence.setBitLength(minEntropySequenceLength-1);
 			actualSequence = new ByteSequence(new byte[]{(byte)0x80}, 1);
 			actualSequence.add(sourceSequence);

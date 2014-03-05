@@ -1,11 +1,9 @@
 package cz.muni.fi.randgka.randgkamiddle;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-
-import cz.muni.fi.randgka.library.ByteSequence;
+import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.randgkamiddle.RandExtractorActivity;
+import cz.muni.fi.randgka.tools.ByteSequence;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
@@ -20,7 +18,7 @@ public class GKAProtocolRunActivity extends Activity {
 			if (data != null && data.getSerializableExtra("randomData") != null) {
 					ByteSequence randomSequence = (ByteSequence)data.getSerializableExtra("randomData");
 					
-					Intent randomnessReceived = new Intent(this, ConnectionService.class);
+					Intent randomnessReceived = new Intent(this, BluetoothCommunicationService.class);
 					randomnessReceived.setAction(Constants.PROTOCOL_RANDOMNESS);
 					randomnessReceived.putExtra("randSequence", randomSequence);
 					startService(randomnessReceived);

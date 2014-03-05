@@ -2,7 +2,6 @@ package cz.muni.fi.randgkaapp;
 
 import java.math.BigInteger;
 
-import cz.muni.fi.randgka.provider.random.UHRandExtractor2;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
