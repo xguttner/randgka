@@ -116,7 +116,7 @@ public class BluetoothCommunicationService extends Service {
 		Intent runProtocolIntent = new Intent(context, GKAProtocolPrintKeyAppActivity.class);
 	    runProtocolIntent.setAction(Intent.ACTION_VIEW);
 	    runProtocolIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    runProtocolIntent.putExtra("key", protocol.getKey());
+	    runProtocolIntent.putExtra("key", protocol.getKey().toByteArray());
 	    context.startActivity(runProtocolIntent);
 	}
 	
