@@ -21,9 +21,9 @@ import cz.muni.fi.randgka.gka.GKAProtocolRound;
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.PublicKeyCryptography;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
+import cz.muni.fi.randgka.randgkaapp.GKAProtocolPrintKeyAppActivity;
 import cz.muni.fi.randgka.tools.MessageAction;
 import cz.muni.fi.randgka.tools.PMessage;
-import cz.muni.fi.randgkaapp.GKAProtocolPrintKeyAppActivity;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -36,7 +36,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 public class BluetoothCommunicationService extends Service {
 	
@@ -70,15 +69,13 @@ public class BluetoothCommunicationService extends Service {
 		String action = intent.getAction();
 		if (action.equals(Constants.SERVER_START)) {
 			try {
-				Log.d("service", "actAsServer");
 				actAsServer(this, BluetoothAdapter.getDefaultAdapter());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if (action.equals(Constants.CONNECT_TO_DEVICE)) {
-			Log.d("service", "connectToDevice");
 			BluetoothDevice bluetoothDevice = (BluetoothDevice) intent.getParcelableExtra("bluetoothDevice");
-			connectToDevice(bluetoothDevice, this);
+			connectToServer(bluetoothDevice, this);
 		} else if (action.equals(Constants.RUN_GKA_PROTOCOL)) {
 			if (listenSocketThread != null) listenSocketThread.interrupt();
 			
@@ -130,7 +127,6 @@ public class BluetoothCommunicationService extends Service {
 	private class PMessageHandler extends Handler {
 		@Override
 		public void handleMessage(Message message) {
-			Log.d("handle", "message");
 			Bundle bundle = message.getData();
 			if (bundle != null) {
 				PMessage pMessage = (PMessage)bundle.getSerializable("pMessage");
@@ -139,7 +135,6 @@ public class BluetoothCommunicationService extends Service {
 						
 						case ADD_PARTICIPANT:
 							GKAParticipant participantReceived = new GKAParticipant(pMessage.getMessage());
-							Log.d("participant", participantReceived.toString());
 							byte[] bfBytes = new byte[pMessage.getLength() - participantReceived.length()];
 							System.arraycopy(pMessage.getMessage(), participantReceived.length(), bfBytes, 0, pMessage.getLength() - participantReceived.length());
 							BluetoothFeatures bf = new BluetoothFeatures(bfBytes);
@@ -242,9 +237,7 @@ public class BluetoothCommunicationService extends Service {
 		    			participants.add(participant, bf);
 		    			threads.put(bf.getMacAddress(), ct);
 		    	        
-		    	        /*PMessage newDevicePMessage = new PMessage(MessageAction.BROADCAST_PARTICIPANTS, (byte)0, (byte)0, (byte)0, participants.getLeader().getBytes());
-		    	        newDevicePMessage.obtainMessage(pHandler.obtainMessage()).sendToTarget();*/
-		            }
+		    	    }
 	            } catch (IOException e) {
 	            	e.printStackTrace();
 	                break;
@@ -264,7 +257,7 @@ public class BluetoothCommunicationService extends Service {
 		
 	}
 	
-	public void connectToDevice(BluetoothDevice bluetoothDevice, Context context) {
+	public void connectToServer(BluetoothDevice bluetoothDevice, Context context) {
 		try {
             // MY_UUID is the app's UUID string, also used by the server code
             BluetoothSocket bs = bluetoothDevice.createRfcommSocketToServiceRecord(GKA_UUID);
@@ -302,8 +295,6 @@ public class BluetoothCommunicationService extends Service {
 	
 	private class CommunicationThread extends Thread {
 		
-		private static final long serialVersionUID = -2952068172024143729L;
-		
 		private BluetoothSocket bs;
 	    private InputStream inStream;
 	    private OutputStream outStream;
@@ -311,10 +302,6 @@ public class BluetoothCommunicationService extends Service {
 	    public CommunicationThread(BluetoothSocket bs) {
 	    	this.bs = bs;
 	    	this.setStreams();
-	    }
-	    
-	    public BluetoothDevice getBluetoothDevice() {
-	    	return bs.getRemoteDevice();
 	    }
 	    
 	    public void setStreams() {
@@ -329,8 +316,6 @@ public class BluetoothCommunicationService extends Service {
 	    public void run() {
 	        byte[] buffer = new byte[2048];  // buffer store for the stream
 	        int bytes; // bytes returned from read()
-	        
-	        //protocolHandler.runProtocol();
 	        
 	        // Keep listening to the InputStream until an exception occurs
 	        while (true) {
@@ -348,9 +333,6 @@ public class BluetoothCommunicationService extends Service {
 	                
 	        		m.setData(pMessageBundle);
 	                m.sendToTarget();
-	                
-	        		//pMessage.obtainMessage(pHandler.obtainMessage()).sendToTarget();
-	                Log.d("received", pMessage.toString());
 	            } catch (IOException e) {
 	                break;
 	            }

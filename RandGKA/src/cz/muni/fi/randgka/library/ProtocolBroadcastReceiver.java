@@ -2,13 +2,10 @@ package cz.muni.fi.randgka.library;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothFeatures;
 import cz.muni.fi.randgka.bluetoothgka.BluetoothGKAParticipants;
-import cz.muni.fi.randgka.gka.GKAParticipant;
 import cz.muni.fi.randgka.library.Constants;
-import cz.muni.fi.randgka.randgkamiddle.RandExtractorActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.widget.TextView;
 
 public class ProtocolBroadcastReceiver extends BroadcastReceiver {

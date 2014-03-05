@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.util.Log;
 import cz.muni.fi.randgka.tools.Byteable;
 
 public class GKAParticipants implements Byteable {
@@ -125,7 +124,6 @@ public class GKAParticipants implements Byteable {
 		while (i < participantsSize) {
 			currentParticipantBytes = new byte[bytes.length - offset];
 			System.arraycopy(bytes, offset, currentParticipantBytes, 0, bytes.length - offset);
-			Log.d("cb", new String(currentParticipantBytes));
 			GKAParticipant p = new GKAParticipant(currentParticipantBytes);
 			add(p);
 			offset += p.length();

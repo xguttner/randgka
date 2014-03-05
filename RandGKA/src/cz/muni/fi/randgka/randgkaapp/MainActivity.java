@@ -27,11 +27,6 @@ public class MainActivity extends Activity {
 		startActivity(moving);
 	}
 	
-	public void moveToRandExtractorAppActivity(View view) {
-		Intent moving = new Intent(this, RandExtractorAppActivity.class);
-		startActivity(moving);
-	}
-	
 	public void moveToRandExtractor2AppActivity(View view) {
 		Intent moving = new Intent(this, RandExtractor2AppActivity.class);
 		startActivity(moving);

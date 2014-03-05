@@ -81,7 +81,7 @@
             android:label="@string/title_activity_public_key_cryptography_app" >
         </activity>
         <activity
-            android:name="cz.muni.fi.randgkaapp.GKAProtocolPrintKeyAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolPrintKeyAppActivity"
             android:label="@string/title_activity_gkaprotocol_print_key_app" >
         </activity>
         <activity

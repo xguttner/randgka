@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import cz.muni.fi.randgka.library.Constants;
 import cz.muni.fi.randgka.library.MinEntropySourceType;
+import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.randgkamiddle.MinEntropySourceActivity;
 import cz.muni.fi.randgka.tools.ByteSequence;
 import cz.muni.fi.randgkaapp.R;
@@ -11,13 +12,15 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.Menu;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
 public class MinEntropySourceAppActivity extends Activity {
-	//private CameraMES cameraRS;
-	//private SurfaceView surface;
+	private CameraMES cameraRS;
+	private SurfaceView surface;
 	//private MinEntropySource source;
 	//private ByteSequence sequence;
 	//private File file;
@@ -26,11 +29,10 @@ public class MinEntropySourceAppActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_rand_source);
-		/*surface=(SurfaceView)findViewById(R.id.surfaceView);
+		surface=(SurfaceView)findViewById(R.id.surfaceView);
         SurfaceHolder holder=surface.getHolder();
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
-        cameraRS=new CameraRS(surface);*/
 	}
 	
 	@Override
@@ -119,7 +121,7 @@ public class MinEntropySourceAppActivity extends Activity {
 		getMinEntropyData.putExtra("minEntropySourceType", minEntropySourceType);
 		getMinEntropyData.putExtra("minEntropyDataLength", Integer.parseInt(minEntropyDataLength.getText().toString()));
 		
-		startActivityForResult(getMinEntropyData, Constants.MINENTROPY_DATA_RC);
+		//startActivityForResult(getMinEntropyData, Constants.MINENTROPY_DATA_RC);
 		
 		/*String strSeq;
 		try {

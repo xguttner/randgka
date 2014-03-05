@@ -1,7 +1,8 @@
-package cz.muni.fi.randgkaapp;
+package cz.muni.fi.randgka.randgkaapp;
 
 import java.math.BigInteger;
 
+import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;

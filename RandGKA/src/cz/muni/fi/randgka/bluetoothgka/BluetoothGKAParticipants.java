@@ -42,7 +42,7 @@ public class BluetoothGKAParticipants extends GKAParticipants implements Seriali
 		}
 	}
 	
-	public void mergeUsingMac(GKAParticipant gkaParticipant, BluetoothFeatures bf) {
+	private void mergeUsingMac(GKAParticipant gkaParticipant, BluetoothFeatures bf) {
 		if (features != null) {
 			GKAParticipant currentParticipant = null;
 			Integer entryToRemoveId = null;

@@ -6,10 +6,8 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 import android.util.Base64;
-import android.util.Log;
 import cz.muni.fi.randgka.tools.Byteable;
 
 public class BluetoothFeatures implements Byteable {
