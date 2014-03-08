@@ -1,9 +1,12 @@
 package cz.muni.fi.randgka.randgkaapp;
 
+import java.util.Arrays;
+
 import cz.muni.fi.randgka.library.PublicKeyCryptography;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
@@ -37,10 +40,11 @@ public class PublicKeyCryptographyAppActivity extends Activity {
 	
 	private void printCertificate() {
 		EditText certificateInput = (EditText)findViewById(R.id.certificate_input);
-		int length = publicKeyCryptography.getPublicKey().getEncoded().length;
+		int length = Base64.encode(publicKeyCryptography.getPublicKey().getEncoded(), Base64.DEFAULT).length;
 		byte[]hash = publicKeyCryptography.getPublicKeyHash();
+		String byteStr = Arrays.toString(Base64.encode(publicKeyCryptography.getPublicKey().getEncoded(), Base64.DEFAULT));
 		String hashStr = "";
 		for (byte b : hash) hashStr += String.format("%02X ", b);
-		certificateInput.setText(hashStr+"|"+length);
+		certificateInput.setText(byteStr+ "|" + hashStr+"|"+length);
 	}
 }

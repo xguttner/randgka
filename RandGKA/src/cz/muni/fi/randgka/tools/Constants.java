@@ -34,4 +34,8 @@ public final class Constants {
 	
 	public static final int RECEIVED_DATA = 2878;
 
+	/**
+	 * Public cryptography key length
+	 */
+	public static final int PKEY_LENGTH = 512;
 }

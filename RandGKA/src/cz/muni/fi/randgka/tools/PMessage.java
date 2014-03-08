@@ -2,6 +2,15 @@ package cz.muni.fi.randgka.tools;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 
 import android.os.Bundle;
@@ -13,26 +22,34 @@ public class PMessage implements Serializable, Byteable {
 	
 	private static final long serialVersionUID = 7176163014773441688L;
 
-	private static final int STATIC_LENGTH = 10;
+	private static final int STATIC_LENGTH = 11;
+	private static String signAlg = "SHA256withRSA";
 	
 	private MessageAction action;
 	private byte roundNo;
 	private int originatorId;
 	private int length;
+	private boolean signed;
 	private byte[] message;
+	private byte[] signature;
 	
-	public PMessage() {}
+	public PMessage() {
+		signed = false;
+	}
 	
 	public PMessage(byte[] pMessageInBytes) {
+		signed = false;
 		fromBytes(pMessageInBytes);
 	}
 
-	public PMessage(MessageAction action, byte roundNo, int originatorId, int length, byte[] message) {
+	public PMessage(MessageAction action, byte roundNo, int originatorId, int length, boolean signed, byte[] message, byte[] signature) {
 		this.action = action;
 		this.roundNo = roundNo;
 		this.originatorId = originatorId;
 		this.length = length;
+		this.signed = signed;
 		this.message = message;
+		this.signature = signature;
 	}
 
 	public Message obtainMessage(Message message) {
@@ -45,8 +62,7 @@ public class PMessage implements Serializable, Byteable {
         return message;
 	}
 	
-	public byte[] getBytes() {
-		
+	private byte[] getBytesNoSignature() {
 		byte[] lengthBytes = ByteBuffer.allocate(4).putInt(length).array();
 		
 		byte[] rv = new byte[length+STATIC_LENGTH];
@@ -54,11 +70,28 @@ public class PMessage implements Serializable, Byteable {
 		rv[1] = roundNo;
 		
 		byte [] originatorIdBytes = ByteBuffer.allocate(4).putInt(originatorId).array();
-		System.arraycopy(originatorIdBytes, 0, rv, 2, 4);
 		
+		System.arraycopy(originatorIdBytes, 0, rv, 2, 4);
 		System.arraycopy(lengthBytes, 0, rv, 6, 4);
-		System.arraycopy(message, 0, rv, 10, length);
+		
+		rv[10] = (byte)((signed)?1:0);
+		
+		System.arraycopy(message, 0, rv, STATIC_LENGTH, length);
+		
+		return rv;
+	}
+	
+	public byte[] getBytes() {
+		byte[] rv = new byte[length()];
+		byte[] noSig = getBytesNoSignature();
+		
+		System.arraycopy(noSig, 0, rv, 0, length+STATIC_LENGTH);
+		
+		if (signed && signature != null) System.arraycopy(signature, 0, rv, length+STATIC_LENGTH, Constants.PKEY_LENGTH/8);
+		
 		rv = Base64.encode(rv, Base64.DEFAULT);
+		
+		//Log.d("push", this.toString());
 		
 		return rv;
 	}
@@ -103,6 +136,31 @@ public class PMessage implements Serializable, Byteable {
 		this.message = message;
 	}
 
+	public boolean isSigned() {
+		return signed;
+	}
+
+	public void setSigned(boolean signed) {
+		this.signed = signed;
+	}
+
+	public byte[] getSignature() {
+		return signature;
+	}
+
+	public void setSignature(byte[] signature) {
+		this.signature = signature;
+	}
+
+	@Override
+	public String toString() {
+		return "PMessage [action=" + action + ", roundNo=" + roundNo
+				+ ", originatorId=" + originatorId + ", length=" + length
+				+ ", signed=" + signed + ", message="
+				+ Arrays.toString(message) + ", signature="
+				+ Arrays.toString(signature) + "]";
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -112,6 +170,8 @@ public class PMessage implements Serializable, Byteable {
 		result = prime * result + Arrays.hashCode(message);
 		result = prime * result + originatorId;
 		result = prime * result + roundNo;
+		result = prime * result + Arrays.hashCode(signature);
+		result = prime * result + (signed ? 1231 : 1237);
 		return result;
 	}
 
@@ -134,19 +194,16 @@ public class PMessage implements Serializable, Byteable {
 			return false;
 		if (roundNo != other.roundNo)
 			return false;
+		if (!Arrays.equals(signature, other.signature))
+			return false;
+		if (signed != other.signed)
+			return false;
 		return true;
 	}
 
 	@Override
-	public String toString() {
-		return "PMessage [action=" + action + ", roundNo=" + roundNo
-				+ ", originatorId=" + originatorId + ", length=" + length
-				+ ", message=" + Arrays.toString(message) + "]";
-	}
-
-	@Override
 	public int length() {
-		return length+STATIC_LENGTH;
+		return length + STATIC_LENGTH + (signed?Constants.PKEY_LENGTH/8:0);
 	}
 
 	@Override
@@ -163,10 +220,61 @@ public class PMessage implements Serializable, Byteable {
 		byte[] lengthBytes = new byte[4];
 		System.arraycopy(pMessageInBytes, 6, lengthBytes, 0, 4);
 		length = ByteBuffer.wrap(lengthBytes).getInt();
-		Log.d("len", length+" "+pMessageInBytes.length);
-		message = new byte[length];
 		
-		System.arraycopy(pMessageInBytes, 10, message, 0, length);
+		signed = (pMessageInBytes[10] == (byte)1)?true:false;
+		
+		message = new byte[length];
+		System.arraycopy(pMessageInBytes, 11, message, 0, length);
+		
+		if (signed) {
+			signature = new byte[Constants.PKEY_LENGTH/8];
+			System.arraycopy(pMessageInBytes, length+11, signature, 0, Constants.PKEY_LENGTH/8);
+		}
+		
+		//Log.d("pull", this.toString());
+		
+	}
+	
+	public void selfSign(PrivateKey privateKey, SecureRandom secureRandom) {
+		signed = true;
+		if (privateKey != null) {
+			try {
+				RSAPrivateKey rk = (RSAPrivateKey)privateKey;
+				Signature signature = Signature.getInstance(signAlg, "BC");
+			    signature.initSign(privateKey, secureRandom);
+			    signature.update(getBytesNoSignature());
+			    this.signature = signature.sign();
+			    
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (NoSuchProviderException e) {
+				e.printStackTrace();
+			} catch (InvalidKeyException e) {
+				e.printStackTrace();
+			} catch (SignatureException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public boolean selfVerify(PublicKey publicKey) {
+		try {
+			
+			Signature signature = Signature.getInstance(signAlg, "BC");
+			signature.initVerify(publicKey);
+		    signature.update(getBytesNoSignature());
+		    return signature.verify(this.signature);
+		    
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 }

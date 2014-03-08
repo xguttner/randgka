@@ -1,7 +1,10 @@
 package cz.muni.fi.randgka.library;
 
+import java.security.interfaces.RSAPublicKey;
+
 import cz.muni.fi.randgka.bluetoothgka.BluetoothFeatures;
 import cz.muni.fi.randgka.bluetoothgka.BluetoothGKAParticipants;
+import cz.muni.fi.randgka.gka.GKAParticipant;
 import cz.muni.fi.randgka.tools.Constants;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,8 +22,12 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 				textView.setText("");
 				BluetoothGKAParticipants gkaParticipants = (BluetoothGKAParticipants)intent.getSerializableExtra("participants");
 				if (gkaParticipants != null) {
-					for (BluetoothFeatures bf : gkaParticipants.getFeatures()) {
-						textView.append(bf.getName()+" "+bf.getMacAddress()+" "+((bf.getPublicKey()!=null)?bf.getPublicKey().toString():""));
+					BluetoothFeatures bf = null;
+					for (GKAParticipant g : gkaParticipants.getParticipants()) {
+						bf = gkaParticipants.getBluetoothFeaturesFor(g.getId());
+						textView.append(""+bf.getName()+" ("+bf.getMacAddress()+")"+
+								((g.getAuthPublicKey()!=null)?("\nPublicKey: "+((RSAPublicKey)g.getAuthPublicKey()).getModulus()+
+										" / "+((RSAPublicKey)g.getAuthPublicKey()).getPublicExponent()):"")+"\n\n");
 					}
 				}
 			}

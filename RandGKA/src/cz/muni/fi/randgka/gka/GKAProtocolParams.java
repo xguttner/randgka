@@ -1,5 +1,7 @@
 package cz.muni.fi.randgka.gka;
 
+import java.security.PrivateKey;
+
 /**
  * Class carrying information about the protocol.
  */
@@ -8,16 +10,18 @@ public class GKAProtocolParams {
 	private boolean authenticated; // version of the protocol to use - authenticated / non-authenticated
 	private int nonceLength, // length of the nonce to be used
 			keyLength; // length of the desired shared key
+	private PrivateKey privateKey;
 	
 	public GKAProtocolParams() {
 		super();
 	}
 	public GKAProtocolParams(boolean authenticated, int nonceLength,
-			int keyLength) {
+			int keyLength, PrivateKey privateKey) {
 		super();
 		this.authenticated = authenticated;
 		this.nonceLength = nonceLength;
 		this.keyLength = keyLength;
+		this.privateKey = privateKey;
 	}
 	public boolean isAuthenticated() {
 		return authenticated;
@@ -37,6 +41,12 @@ public class GKAProtocolParams {
 	public void setKeyLength(int keyLength) {
 		this.keyLength = keyLength;
 	}
+	public PrivateKey getPrivateKey() {
+		return privateKey;
+	}
+	public void setPrivateKey(PrivateKey privateKey) {
+		this.privateKey = privateKey;
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -44,6 +54,8 @@ public class GKAProtocolParams {
 		result = prime * result + (authenticated ? 1231 : 1237);
 		result = prime * result + keyLength;
 		result = prime * result + nonceLength;
+		result = prime * result
+				+ ((privateKey == null) ? 0 : privateKey.hashCode());
 		return result;
 	}
 	@Override
@@ -61,12 +73,17 @@ public class GKAProtocolParams {
 			return false;
 		if (nonceLength != other.nonceLength)
 			return false;
+		if (privateKey == null) {
+			if (other.privateKey != null)
+				return false;
+		} else if (!privateKey.equals(other.privateKey))
+			return false;
 		return true;
 	}
 	@Override
 	public String toString() {
 		return "GKAProtocolParams [authenticated=" + authenticated
 				+ ", nonceLength=" + nonceLength + ", keyLength=" + keyLength
-				+ "]";
+				+ ", privateKey=" + privateKey + "]";
 	}
 }

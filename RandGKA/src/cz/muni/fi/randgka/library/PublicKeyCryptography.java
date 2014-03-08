@@ -10,14 +10,14 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.interfaces.RSAPublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
+import cz.muni.fi.randgka.tools.Constants;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
@@ -31,12 +31,10 @@ public class PublicKeyCryptography {
 				PRIVATE_KEY = "PrivateKey";
 	private PublicKey pubKey;
 	private PrivateKey privKey;
-	private Context context;
 	private SharedPreferences sp;
 	private SharedPreferences.Editor spEditor;
 
 	public PublicKeyCryptography(Context context){
-        this.context = context;
         sp = context.getSharedPreferences(SP_FILE, Context.MODE_PRIVATE);
         
         pubKey = getPublicKey();
@@ -88,11 +86,12 @@ public class PublicKeyCryptography {
     public PrivateKey getPrivateKey(){
         String privKeyStr = sp.getString(PRIVATE_KEY, "");
         byte[] sigBytes = Base64.decode(privKeyStr, Base64.DEFAULT);
-        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(sigBytes);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sigBytes);
+        //X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(sigBytes);
         KeyFactory keyFact = null;
         try {
             keyFact = KeyFactory.getInstance("RSA", "BC");
-            return  keyFact.generatePrivate(x509KeySpec);
+            return  keyFact.generatePrivate(keySpec);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchProviderException e) {
@@ -108,7 +107,7 @@ public class PublicKeyCryptography {
 	public void generateKeys(){
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
-            generator.initialize(256, new SecureRandom()); // replace with my own solution
+            generator.initialize(Constants.PKEY_LENGTH, new SecureRandom()); // replace with my own solution
             KeyPair pair = generator.generateKeyPair();
             pubKey = pair.getPublic();
             privKey = pair.getPrivate();

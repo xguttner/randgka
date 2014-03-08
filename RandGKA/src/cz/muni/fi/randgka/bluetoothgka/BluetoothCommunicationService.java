@@ -36,6 +36,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Base64;
+import android.util.Log;
 
 public class BluetoothCommunicationService extends Service {
 	
@@ -79,13 +81,14 @@ public class BluetoothCommunicationService extends Service {
 		} else if (action.equals(Constants.RUN_GKA_PROTOCOL)) {
 			if (listenSocketThread != null) listenSocketThread.interrupt();
 			
-			GKAProtocolParams params = new GKAProtocolParams(false, 128, 128);
+			GKAProtocolParams params = new GKAProtocolParams(false, 128, 128, publicKeyCryptography.getPrivateKey());
 			
 			Provider pr = new RandGKAProvider();
 	        //try {
+			Log.d("pa1", participants.size()+"");
 				SecureRandom secureRandom = new SecureRandom();// SecureRandom.getInstance("UHRandExtractor", pr);
 				protocol.init(participants, secureRandom, params);
-				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, null));
+				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, false, null, null));
 				sendRound(firstRound);
 	        /*} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
@@ -137,15 +140,14 @@ public class BluetoothCommunicationService extends Service {
 							GKAParticipant participantReceived = new GKAParticipant(pMessage.getMessage());
 							byte[] bfBytes = new byte[pMessage.getLength() - participantReceived.length()];
 							System.arraycopy(pMessage.getMessage(), participantReceived.length(), bfBytes, 0, pMessage.getLength() - participantReceived.length());
-							BluetoothFeatures bf = new BluetoothFeatures(bfBytes);
 							
-							participants.setPublicKey(bf);
+							participants.merge(participantReceived);
 							
 							Intent getDevices = new Intent(Constants.GET_PARTICIPANTS);
 							getDevices.putExtra("participants", participants);
 							lbm.sendBroadcast(getDevices);
 							
-							PMessage broadcastParticipantsMessage = new PMessage(MessageAction.BROADCAST_PARTICIPANTS, (byte)0, (byte)0, participants.length(), participants.getBytes());
+							PMessage broadcastParticipantsMessage = new PMessage(MessageAction.BROADCAST_PARTICIPANTS, (byte)0, (byte)0, participants.length(), false, participants.getBytes(), null);
 							CommunicationThread ct = null;
 							String macAddress = null;
 							for (GKAParticipant p : participants.getAllButMe().getParticipants()) {
@@ -172,7 +174,7 @@ public class BluetoothCommunicationService extends Service {
 						case GKA_PROTOCOL:
 							
 							if (!protocol.isInitialized()) {
-								GKAProtocolParams params = new GKAProtocolParams(false, 128, 128);
+								GKAProtocolParams params = new GKAProtocolParams(false, 128, 128, publicKeyCryptography.getPrivateKey());
 								
 								Provider pr = new RandGKAProvider();
 						        //try {
@@ -199,8 +201,8 @@ public class BluetoothCommunicationService extends Service {
 	
 	public void actAsServer(Context context, BluetoothAdapter bluetoothAdapter) throws IOException {
 		try {
-			GKAParticipant me = new GKAParticipant(0, true, GKAParticipantRole.LEADER, null);
-			BluetoothFeatures bf = new BluetoothFeatures(bluetoothAdapter.getAddress(), bluetoothAdapter.getName(), publicKeyCryptography.getPublicKey());
+			GKAParticipant me = new GKAParticipant(0, true, GKAParticipantRole.LEADER, null, publicKeyCryptography.getPublicKey());
+			BluetoothFeatures bf = new BluetoothFeatures(bluetoothAdapter.getAddress(), bluetoothAdapter.getName());
 			participants.add(me, bf);
 			threads.put(bf.getMacAddress(), null);
 			
@@ -232,8 +234,8 @@ public class BluetoothCommunicationService extends Service {
 		    	        CommunicationThread ct = new CommunicationThread(bs);
 		    	        ct.start();
 		    	        
-		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, false, GKAParticipantRole.MEMBER, null);
-		    			BluetoothFeatures bf = new BluetoothFeatures(bs.getRemoteDevice().getAddress(), bs.getRemoteDevice().getName(), null);
+		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, false, GKAParticipantRole.MEMBER, null, null);
+		    			BluetoothFeatures bf = new BluetoothFeatures(bs.getRemoteDevice().getAddress(), bs.getRemoteDevice().getName());
 		    			participants.add(participant, bf);
 		    			threads.put(bf.getMacAddress(), ct);
 		    	        
@@ -267,13 +269,13 @@ public class BluetoothCommunicationService extends Service {
 	        CommunicationThread ct = new CommunicationThread(bs);
 	        ct.start();
 	        
-	        GKAParticipant participant = new GKAParticipant(0, false, GKAParticipantRole.LEADER, null);
-			BluetoothFeatures bf = new BluetoothFeatures(bluetoothDevice.getAddress(), bluetoothDevice.getName(), null);
+	        GKAParticipant participant = new GKAParticipant(0, false, GKAParticipantRole.LEADER, null, null);
+			BluetoothFeatures bf = new BluetoothFeatures(bluetoothDevice.getAddress(), bluetoothDevice.getName());
 			participants.add(participant, bf);
 			threads.put(bf.getMacAddress(), ct);
 	        
-			GKAParticipant me = new GKAParticipant(1, true, GKAParticipantRole.MEMBER, null);
-			BluetoothFeatures myBf = new BluetoothFeatures(BluetoothAdapter.getDefaultAdapter().getAddress(), BluetoothAdapter.getDefaultAdapter().getName(), publicKeyCryptography.getPublicKey());
+			GKAParticipant me = new GKAParticipant(1, true, GKAParticipantRole.MEMBER, null, publicKeyCryptography.getPublicKey());
+			BluetoothFeatures myBf = new BluetoothFeatures(BluetoothAdapter.getDefaultAdapter().getAddress(), BluetoothAdapter.getDefaultAdapter().getName());
 			participants.add(me, myBf);
 			threads.put(myBf.getMacAddress(), null);
 	        
@@ -281,7 +283,7 @@ public class BluetoothCommunicationService extends Service {
 			System.arraycopy(me.getBytes(), 0, messageBytes, 0, me.length());
 			System.arraycopy(myBf.getBytes(), 0, messageBytes, me.length(), myBf.length());
 
-	        ct.write((new PMessage(MessageAction.ADD_PARTICIPANT, (byte)1, (byte)1, me.length()+myBf.length(), messageBytes)).getBytes());
+	        ct.write((new PMessage(MessageAction.ADD_PARTICIPANT, (byte)1, (byte)1, me.length()+myBf.length(), false, messageBytes, null)).getBytes());
 			
         } catch (IOException e) {
         	e.printStackTrace();

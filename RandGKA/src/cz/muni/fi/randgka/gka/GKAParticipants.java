@@ -52,7 +52,8 @@ public class GKAParticipants implements Byteable {
 		boolean contains = false;
 		for (GKAParticipant p : participants) {
 			if (p.equals(toMerge)) {
-				if (toMerge.getPublicKey() != null) p.setPublicKey(toMerge.getPublicKey());
+				//if (toMerge.getDHPublicKey() != null) p.setDHPublicKey(toMerge.getDHPublicKey());
+				if (toMerge.getAuthPublicKey() != null) p.setAuthPublicKey(toMerge.getAuthPublicKey());
 				contains = true;
 			}
 		}

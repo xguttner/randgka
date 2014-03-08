@@ -34,14 +34,6 @@ public class BluetoothGKAParticipants extends GKAParticipants implements Seriali
 		features.put(participant.getId(), bf);
 	}
 	
-	public void setPublicKey(BluetoothFeatures bf) {
-		if (features != null) {
-			for (Entry<Integer, BluetoothFeatures> e : features.entrySet()) {
-				if (e.getValue().equals(bf)) e.setValue(bf);
-			}
-		}
-	}
-	
 	private void mergeUsingMac(GKAParticipant gkaParticipant, BluetoothFeatures bf) {
 		if (features != null) {
 			GKAParticipant currentParticipant = null;
@@ -50,6 +42,7 @@ public class BluetoothGKAParticipants extends GKAParticipants implements Seriali
 				if (e.getValue().equals(bf)) {
 					currentParticipant = getParticipant(e.getKey());
 					currentParticipant.setId(gkaParticipant.getId());
+					if (currentParticipant.getAuthPublicKey() == null) currentParticipant.setAuthPublicKey(gkaParticipant.getAuthPublicKey());
 					entryToRemoveId = e.getKey();
 					break;
 				}
