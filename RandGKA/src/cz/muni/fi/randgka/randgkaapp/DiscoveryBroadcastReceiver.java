@@ -1,4 +1,4 @@
-package cz.muni.fi.randgka.library;
+package cz.muni.fi.randgka.randgkaapp;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;

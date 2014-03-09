@@ -3,8 +3,6 @@ package cz.muni.fi.randgka.randgkaapp;
 import java.util.Set;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
-import cz.muni.fi.randgka.library.DiscoveryBroadcastReceiver;
-import cz.muni.fi.randgka.library.ProtocolBroadcastReceiver;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
@@ -18,13 +16,11 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-public class GKAProtocolConnectionAppActivity extends Activity {
+public class GKAProtocolConnectAppActivity extends Activity {
 
 	private BluetoothAdapter bluetoothAdapter;
 	private boolean discoveryRunning = false;
 	private DiscoveryBroadcastReceiver discoveryBR;
-	private ProtocolBroadcastReceiver protocolBR;
-	//private BluetoothCommunication bluetoothCommunication;
 	private static final int REQUEST_ENABLE_BT = 1785, REQUEST_DISCOVERABLE_BT = 1786;
 	
 	@Override
@@ -54,7 +50,7 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 				startActivity(moving);
 			}
 			else {
-				Intent moving = new Intent(this, GKAProtocolStartAppActivity.class);
+				Intent moving = new Intent(this, GKAProtocolAppActivity.class);
 				startActivity(moving);
 			}
 		}
@@ -63,7 +59,7 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.bluetooth_gka, menu);
+		getMenuInflater().inflate(R.menu.empty, menu);
 		return true;
 	}
 
@@ -83,7 +79,7 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 		discoveryRunning = true;
 		bluetoothAdapter.startDiscovery();
 		
-		printPairedDevices(); //TODO think about better place to put this refresh - this way only the clients can see the paired devices
+		printPairedDevices();
 	}
 	
 	public void actAsServer(View view) {
@@ -96,13 +92,6 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
 		bpsIntent.setAction(Constants.SERVER_START);
 		startService(bpsIntent);
-		/*try {
-			bluetoothCommunication.actAsServer(view.getContext(), bluetoothAdapter);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-		
 	}
 	
 	public void connectToDiscovered(View view) {
@@ -124,13 +113,12 @@ public class GKAProtocolConnectionAppActivity extends Activity {
 		if (discoveryRunning) bluetoothAdapter.cancelDiscovery();
 		
 		// connect
-		//bluetoothCommunication.connectToDevice(bluetoothDevice, view.getContext());
 		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
 		bpsIntent.setAction(Constants.CONNECT_TO_DEVICE);
 		bpsIntent.putExtra("bluetoothDevice", bluetoothDevice);
 		startService(bpsIntent);
 		
-		Intent moving = new Intent(this, GKAProtocolStartAppActivity.class);
+		Intent moving = new Intent(this, GKAProtocolAppActivity.class);
 		startActivity(moving);
 	}
 	

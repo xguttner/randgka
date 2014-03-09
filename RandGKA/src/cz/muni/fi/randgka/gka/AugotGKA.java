@@ -105,7 +105,7 @@ public class AugotGKA implements GKAProtocol {
 		PMessage pMessage = new PMessage();
 		
 		pMessage.setRoundNo((byte)1);
-		pMessage.setAction(MessageAction.GKA_PROTOCOL);
+		pMessage.setAction(MessageAction.INIT_GKA_PROTOCOL);
 		pMessage.setOriginatorId(participants.getMe().getId());
 		
 		nonce = new byte[gkaProtocolParams.getNonceLength()];
@@ -173,6 +173,7 @@ public class AugotGKA implements GKAProtocol {
 				Log.d("receivedPublic", receivedPublic.toString(16));
 				Log.d("pLen", receivedPublic.toByteArray().length+"");
 				Log.d("compoundPublic", compoundPublic.toString(16));
+				Log.d("key1", key.toString(16));
 				
 				originator.setDHPublicKey(receivedPublic);
 				participants.merge(originator);
@@ -234,12 +235,14 @@ public class AugotGKA implements GKAProtocol {
 				
 				BigInteger compoundPublic = new BigInteger(1, currentCompoundKeyArray);
 				compoundPublic = compoundPublic.mod(p);
+				Log.d("key0", key.toString(16));
 				key = key.multiply(compoundPublic).mod(p);
 				Log.d("compoundPublic", compoundPublic.toString(16));
-				
+				Log.d("key1", key.toString(16));
 				if (originator.equals(participants.getMe())) {
 					Log.d("publicKey", compoundPublic.modPow(secretInverse, p).toString(16));
 					key = key.multiply(compoundPublic.modPow(secretInverse, p)).mod(p);
+					Log.d("key2", key.toString(16));
 				}	
 			
 			offset += secondRoundBroadcastPartLength;
@@ -255,8 +258,8 @@ public class AugotGKA implements GKAProtocol {
 		if (participants.getMe().getRole().equals(GKAParticipantRole.LEADER)) {
 			Log.d("publicKey", publicKey.toString(16));
 			key = key.multiply(publicKey).mod(p);
+			Log.d("key2", key.toString(16));
 		}
-		
 		return key;
 	}
 

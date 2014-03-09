@@ -20,7 +20,6 @@ import cz.muni.fi.randgka.gka.GKAProtocolParams;
 import cz.muni.fi.randgka.gka.GKAProtocolRound;
 import cz.muni.fi.randgka.library.PublicKeyCryptography;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
-import cz.muni.fi.randgka.randgkaapp.GKAProtocolPrintKeyAppActivity;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.MessageAction;
 import cz.muni.fi.randgka.tools.PMessage;
@@ -31,10 +30,12 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
@@ -53,16 +54,22 @@ public class BluetoothCommunicationService extends Service {
 	private LocalBroadcastManager lbm;
 	private Context context;
 	private int newParticipantId;
+	private SharedPreferences sp;
 	
 	@Override
 	public void onCreate() {
+		init();
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
+		pHandler = new PMessageHandler();
+		context = this.getBaseContext();
+		lbm = LocalBroadcastManager.getInstance(this);
+		publicKeyCryptography = new PublicKeyCryptography(context);
+	}
+	
+	private void init() {
 		participants = new BluetoothGKAParticipants();
 		threads = new HashMap<String, CommunicationThread>();
-		pHandler = new PMessageHandler();
 		protocol = new AugotGKA();
-		lbm = LocalBroadcastManager.getInstance(this);
-		context = this.getBaseContext();
-		publicKeyCryptography = new PublicKeyCryptography(context);
 		newParticipantId = 0;
 	}
 	
@@ -71,21 +78,25 @@ public class BluetoothCommunicationService extends Service {
 		String action = intent.getAction();
 		if (action.equals(Constants.SERVER_START)) {
 			try {
+				init();
 				actAsServer(this, BluetoothAdapter.getDefaultAdapter());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if (action.equals(Constants.CONNECT_TO_DEVICE)) {
+			init();
 			BluetoothDevice bluetoothDevice = (BluetoothDevice) intent.getParcelableExtra("bluetoothDevice");
 			connectToServer(bluetoothDevice, this);
 		} else if (action.equals(Constants.RUN_GKA_PROTOCOL)) {
 			if (listenSocketThread != null) listenSocketThread.interrupt();
+			reset();
 			
-			GKAProtocolParams params = new GKAProtocolParams(false, 128, 128, publicKeyCryptography.getPrivateKey());
+			GKAProtocolParams params = new GKAProtocolParams(sp.getBoolean("pref_gka_authorized", false), 
+					Integer.parseInt(sp.getString("pref_gka_nonce_length", "1024"))/8, 
+					Integer.parseInt(sp.getString("pref_gka_key_length", "1024"))/8, publicKeyCryptography.getPrivateKey());
 			
 			Provider pr = new RandGKAProvider();
 	        //try {
-			Log.d("pa1", participants.size()+"");
 				SecureRandom secureRandom = new SecureRandom();// SecureRandom.getInstance("UHRandExtractor", pr);
 				protocol.init(participants, secureRandom, params);
 				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, false, null, null));
@@ -96,8 +107,15 @@ public class BluetoothCommunicationService extends Service {
 		}
 		return START_NOT_STICKY;
 	}
-	
-	
+
+	private void reset() {
+		if (participants !=null) {
+			for (GKAParticipant p : participants.getParticipants()) {
+				p.setDHPublicKey(null);
+			}
+		}
+	}
+
 	private void sendRound(GKAProtocolRound pr) {
 		if (pr != null) {
 			if (pr.getActionCode() == GKAProtocolRound.SUCCESS) {
@@ -113,11 +131,9 @@ public class BluetoothCommunicationService extends Service {
 	}
 	
 	private void printKey() {
-		Intent runProtocolIntent = new Intent(context, GKAProtocolPrintKeyAppActivity.class);
-	    runProtocolIntent.setAction(Intent.ACTION_VIEW);
-	    runProtocolIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    runProtocolIntent.putExtra("key", protocol.getKey().toByteArray());
-	    context.startActivity(runProtocolIntent);
+		Intent printKeyIntent = new Intent(Constants.GET_GKA_KEY);
+	    printKeyIntent.putExtra("key", protocol.getKey().toByteArray());
+	    lbm.sendBroadcast(printKeyIntent);
 	}
 	
 	@Override
@@ -172,25 +188,23 @@ public class BluetoothCommunicationService extends Service {
 							break;
 						
 						case GKA_PROTOCOL:
-							
-							if (!protocol.isInitialized()) {
-								GKAProtocolParams params = new GKAProtocolParams(false, 128, 128, publicKeyCryptography.getPrivateKey());
-								
-								Provider pr = new RandGKAProvider();
-						        //try {
-									SecureRandom secureRandom = new SecureRandom();//SecureRandom.getInstance("UHRandExtractor", pr);
-									protocol.init(participants, secureRandom, params);
-									sendRound(protocol.nextRound(pMessage));
-						        /*} catch (NoSuchAlgorithmException e) {
-									e.printStackTrace();
-								}*/
-							}
-							else {
 								sendRound(protocol.nextRound(pMessage));
-							}
-							
 							break;
 							
+						case INIT_GKA_PROTOCOL:
+							reset();
+							GKAProtocolParams params = new GKAProtocolParams(sp.getBoolean("pref_gka_authorized", false), 
+									Integer.parseInt(sp.getString("pref_gka_nonce_length", "1024"))/8, 
+									Integer.parseInt(sp.getString("pref_gka_key_length", "1024"))/8, publicKeyCryptography.getPrivateKey());
+							
+							Provider pr = new RandGKAProvider();
+					        //try {
+								SecureRandom secureRandom = new SecureRandom();//SecureRandom.getInstance("UHRandExtractor", pr);
+								protocol.init(participants, secureRandom, params);
+								sendRound(protocol.nextRound(pMessage));
+					        /*} catch (NoSuchAlgorithmException e) {
+								e.printStackTrace();
+							}*/
 						default:
 							break;
 					}

@@ -296,7 +296,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 
 	}
 
-	private void stop() {
+	public void stop() {
 		if (camera != null) {
 			camera.stopPreview();
 			camera.release();
@@ -316,7 +316,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 
 	public void surfaceCreated(SurfaceHolder holder) {
 		try {
-			if (camera == null) initialize();
+			if (camera == null) initialize(surfaceView);
 			camera.setPreviewDisplay(holder);
 			surfaceReady = true;
 			if (cameraReady) {
@@ -330,6 +330,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	}
 
 	public void surfaceDestroyed(SurfaceHolder holder) {
+		holder.getSurface().release();
 		stop();
 	}
 

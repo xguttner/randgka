@@ -19,9 +19,8 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 
 	private MinEntropySource mes;
 	
-	private static final int minEntropySequenceLength = 839;
-	private static final int trueRandomSequenceLength = 629;
-	private static final int seedLength = 839;
+	private static final int inputLength = 839;
+	private static final int outputLength = 629;
 	private ByteSequence seed;
 	private byte[]seedArray={(byte)0x9a, (byte)0x2a, (byte)0x21, (byte)0x6e, (byte)0x90, (byte)0xa5, (byte)0xae, (byte)0xa4, (byte)0xb6, (byte)0x49, (byte)0xbb, (byte)0xe5, (byte)0xe2, (byte)0x6e, (byte)0x5c, (byte)0x64,
 			 (byte)0xf1, (byte)0x3e, (byte)0xc1, (byte)0x50, (byte)0xd0, (byte)0xc3, (byte)0xc3, (byte)0x1d, (byte)0x27, (byte)0xc7, (byte)0xe1, (byte)0x4e, (byte)0x06, (byte)0xac, (byte)0x35, (byte)0x2b,
@@ -47,7 +46,7 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 		mes = CameraMESHolder.cameraMES;
 		if (!mes.ready()) throw new SecurityException("Min-entropy source was not successfully initialized.");
 		
-		seed = new ByteSequence(seedArray, seedLength);
+		seed = new ByteSequence(seedArray, inputLength);
 	}
 	
 	@Override
@@ -74,16 +73,15 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 		ByteSequence actualSequence = null;
 		ByteSequence sourceSequence = null;
 		
-		int extractionRounds = (int)Math.ceil((double)length/trueRandomSequenceLength);
+		int extractionRounds = (int)Math.ceil((double)length/outputLength);
 		
-		Log.d("rounds",extractionRounds+"");
 		for (int j = 0; j < extractionRounds; j++) {
-			sourceSequence = mes.getPreprocessedSourceData(minEntropySequenceLength-1, null);
+			sourceSequence = mes.getMinEntropyData(inputLength-1);
 			
 			actualSequence = new ByteSequence(new byte[]{(byte)0x80}, 1); //set 1 as the first bit
 			actualSequence.add(sourceSequence);
 			
-			for (int i = 0; i < trueRandomSequenceLength; i++) {
+			for (int i = 0; i < outputLength; i++) {
 				seed.rotateBitsLeft();
 				try {
 					returnSequence.addBit(seed.scalarProduct(actualSequence));

@@ -38,43 +38,17 @@
             android:label="@string/rand_extractor" >
         </activity>
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolConnectionAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolConnectAppActivity"
             android:label="@string/bluetooth_gka" >
         </activity>
-        <!--
-        <activity
-            android:name="cz.muni.fi.androidrandextr.AuthenticationClientActivity"
-            android:label="@string/authentication" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.androidrandextr.AuthenticationPINActivity"
-            android:label="@string/authentication_pin" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.androidrandextr.AuthenticationServerActivity"
-            android:label="@string/title_activity_authentication_server" >
-        </activity>
-        -->
         <service
             android:name="cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService"
             android:exported="false" >
         </service>
 
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolStartAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolAppActivity"
             android:label="@string/title_activity_gkaprotocol" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.randgka.randgkamiddle.MinEntropySourceActivity"
-            android:label="@string/title_activity_min_entropy_source" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.randgka.randgkamiddle.RandExtractorActivity"
-            android:label="@string/title_activity_rand_extractor" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.randgka.randgkamiddle.GKAProtocolRunActivity"
-            android:label="@string/title_activity_gkaprotocol_random_data" >
         </activity>
         <activity
             android:name="cz.muni.fi.randgka.randgkaapp.PublicKeyCryptographyAppActivity"
@@ -84,10 +58,7 @@
             android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolPrintKeyAppActivity"
             android:label="@string/title_activity_gkaprotocol_print_key_app" >
         </activity>
-        <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.RandExtractor2AppActivity"
-            android:label="@string/title_activity_rand_extractor2_app" >
-        </activity>
+        <activity android:name="cz.muni.fi.randgka.randgkaapp.SettingsActivity" />
     </application>
 
 </manifest>

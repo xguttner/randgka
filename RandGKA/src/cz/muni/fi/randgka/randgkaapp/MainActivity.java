@@ -2,9 +2,12 @@ package cz.muni.fi.randgka.randgkaapp;
 
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 public class MainActivity extends Activity {
@@ -18,8 +21,14 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.settings, menu);
 		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+  		startActivity(new Intent(this, SettingsActivity.class));
+  		return true;
 	}
 
 	public void moveToMinEntropySourceAppActivity(View view) {
@@ -28,12 +37,12 @@ public class MainActivity extends Activity {
 	}
 	
 	public void moveToRandExtractor2AppActivity(View view) {
-		Intent moving = new Intent(this, RandExtractor2AppActivity.class);
+		Intent moving = new Intent(this, RandExtractorAppActivity.class);
 		startActivity(moving);
 	}
 	
 	public void moveToGKAProtocolAppActivity(View view) {
-		Intent moving = new Intent(this, GKAProtocolConnectionAppActivity.class);
+		Intent moving = new Intent(this, GKAProtocolConnectAppActivity.class);
 		startActivity(moving);
 	}
 	

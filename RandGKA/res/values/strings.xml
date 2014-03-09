@@ -6,6 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="rand_source">Randomness Source</string>
     <string name="rand_extractor">Randomness Extractor</string>
+    <string name="uh_rand_extractor">Universal-Hash RE</string>
     <string name="source_type">Source type</string>
     <string name="camera">Camera</string>
     <string name="microphone">Microphone</string>
@@ -25,14 +26,6 @@
     <string name="discovered_devices">Discovered Devices</string>
     <string name="paired_devices">Paired Devices</string>
     <string name="authentication">Authentication</string>
-    <string name="nfc">NFC</string>
-    <string name="mutual_pin">Mutual PIN</string>
-    <string name="trust_former">Trust Former</string>
-    <string name="authenticate">Authenticate</string>
-    <string name="authentication_pin">Authentication PIN</string>
-    <string name="pin_to_let">PIN To Let</string>
-    <string name="pin_to_fill">PIN To Fill</string>
-    <string name="title_activity_authentication_server">AuthenticationServerActivity</string>
     <string name="title_activity_gkaprotocol">GKAProtocolActivity</string>
     <string name="run_protocol">Run Protocol</string>
     <string name="empty">Empty</string>
@@ -48,5 +41,11 @@
     <string name="my_certificate">My Certificate</string>
     <string name="title_activity_gkaprotocol_print_key_app">GKAProtocolPrintKeyAppActivity</string>
     <string name="title_activity_rand_extractor2_app">RandExtractor2AppActivity</string>
-
+	<string name="min_entropy_source">MinEntropySource</string>
+	<string name="gka">GroupKeyAgreement</string>
+	<string name="min_entropy_sequence">Min-entropy Sequence (16)</string>
+	<string name="extract_data">ExtractData</string>
+	<string name="extracted_data">Extracted Random Data (16)</string>
+	<string name="participants">Protocol Participants</string>
+	<string name="gka_key">GKA Key</string>
 </resources>

@@ -50,4 +50,9 @@ public interface MinEntropySource {
 	 * @return true if the source is ready to output min-entropy sequences
 	 */
 	public boolean ready();
+	
+	/**
+	 * Release all the outer sources needed.
+	 */
+	public void stop();
 }

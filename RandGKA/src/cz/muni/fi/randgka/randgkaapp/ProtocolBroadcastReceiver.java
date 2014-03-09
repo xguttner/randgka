@@ -1,5 +1,6 @@
-package cz.muni.fi.randgka.library;
+package cz.muni.fi.randgka.randgkaapp;
 
+import java.math.BigInteger;
 import java.security.interfaces.RSAPublicKey;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothFeatures;
@@ -13,29 +14,37 @@ import android.widget.TextView;
 
 public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 
-	private TextView textView;
+	private TextView participantsTextView,
+				keyTextView;
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if (intent.getAction().equals(Constants.GET_PARTICIPANTS)) {
-			if (textView != null) {
-				textView.setText("");
+			if (participantsTextView != null) {
+				participantsTextView.setText("");
 				BluetoothGKAParticipants gkaParticipants = (BluetoothGKAParticipants)intent.getSerializableExtra("participants");
 				if (gkaParticipants != null) {
 					BluetoothFeatures bf = null;
 					for (GKAParticipant g : gkaParticipants.getParticipants()) {
 						bf = gkaParticipants.getBluetoothFeaturesFor(g.getId());
-						textView.append(""+bf.getName()+" ("+bf.getMacAddress()+")"+
+						participantsTextView.append(""+bf.getName()+" ("+bf.getMacAddress()+")"+
 								((g.getAuthPublicKey()!=null)?("\nPublicKey: "+((RSAPublicKey)g.getAuthPublicKey()).getModulus()+
 										" / "+((RSAPublicKey)g.getAuthPublicKey()).getPublicExponent()):"")+"\n\n");
 					}
 				}
 			}
+		} else if (intent.getAction().equals(Constants.GET_GKA_KEY)) {
+			if (keyTextView != null) {
+				keyTextView.setText("");
+				byte[] key = intent.getByteArrayExtra("key");
+				keyTextView.append((new BigInteger(key)).toString(16));
+			}
 		}
 	}
 	
-	public void setTextView(TextView textView) {
-		this.textView = textView;
+	public void setTextViews(TextView participantsTextView, TextView keyTextView) {
+		this.participantsTextView = participantsTextView;
+		this.keyTextView = keyTextView;
 	}
 
 }

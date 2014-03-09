@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory 
+        android:title="@string/min_entropy_source">
+        <ListPreference
+	            android:key="pref_mes_type"
+	            android:title="MinEntropySourceType"
+	            android:summary="Define the source used in the application."
+	            android:defaultValue="CAMERA"
+	            android:entries="@array/meSources"
+	            android:entryValues="@array/meSources"
+	        />
+        <EditTextPreference android:key="pref_mes_outfile" 
+            	android:title="OutputFile" 
+            	android:summary="If not null, min-entropy sequences will be stored in file with given name" 
+            	android:dialogTitle="OutputFile"
+            />
+        <EditTextPreference android:title="OutputLength" 
+            	android:key="pref_mes_length" 
+            	android:defaultValue="128" 
+            	android:dialogTitle="OutputLength" 
+            	android:summary="Length of the output of min-entropy source"
+            />
+    </PreferenceCategory>
+    <PreferenceCategory 
+        android:title="@string/rand_extractor">
+        <ListPreference
+	            android:key="pref_re_type"
+	            android:title="RandExtractorType"
+	            android:summary="Define randomness extractor type used in the application."
+	            android:defaultValue="UHRandExtractor"
+	            android:entries="@array/randExtractors"
+	            android:entryValues="@array/randExtractors"
+	        />
+        <EditTextPreference android:title="OutputLength" 
+            	android:key="pref_re_length" 
+            	android:defaultValue="128" 
+            	android:dialogTitle="OutputLength" 
+            	android:summary="Length of the output of randomness extractor"
+            />
+        <ListPreference
+            android:key="pref_uh_input_len"
+            android:title="Universal-Hash RE Input Length"
+            android:summary="Define input length for the UH rand extractor"
+            android:defaultValue="839"
+            android:entries="@array/uhInputLen"
+            android:entryValues="@array/uhInputLen"
+        />
+    </PreferenceCategory>
+    <PreferenceCategory 
+        android:title="@string/gka">
+        <ListPreference
+	            android:key="pref_gka_type"
+	            android:title="GroupKeyAgreementType"
+	            android:summary="Define the gka used in the application."
+	            android:defaultValue="augot"
+	            android:entries="@array/gkaTypes"
+	            android:entryValues="@array/gkaTypes"
+	        />
+        <ListPreference
+	            android:key="pref_gka_nonce_len"
+	            android:title="NonceLength"
+	            android:summary="Length of nonce in bits"
+	            android:defaultValue="1024"
+	            android:entries="@array/bitLengths"
+	            android:entryValues="@array/bitLengths"
+	        />
+        <ListPreference
+	            android:key="pref_gka_key_len"
+	            android:title="GroupKeyLength"
+	            android:summary="Length of output group key in bits"
+	            android:defaultValue="1024"
+	            android:entries="@array/bitLengths"
+	            android:entryValues="@array/bitLengths"
+	        />
+        <CheckBoxPreference
+            android:key="pref_gka_authorized"
+            android:summary="Enable/disable the authorization"
+            android:title="IsAuthorized"
+            android:defaultValue="false" />
+        
+        <ListPreference
+	            android:key="pref_public_key_len"
+	            android:title="PublicKeyLength"
+	            android:summary="Length of public key in bits"
+	            android:defaultValue="512"
+	            android:entries="@array/bitLengths"
+	            android:entryValues="@array/bitLengths"
+	        />
+    </PreferenceCategory>
+</PreferenceScreen>

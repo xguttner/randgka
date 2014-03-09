@@ -6,45 +6,42 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity" >
+    tools:context=".MinEntropySourceAppActivity" >
 
     <Button
         android:id="@+id/button1"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:text="@string/rand_source" 
-        android:onClick="moveToMinEntropySourceAppActivity" />
+        android:onClick="getSourceData"
+        android:text="@string/start" />
 
-    <Button
-        android:id="@+id/button5"
+    <TextView
+        android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/button1"
-        android:onClick="moveToRandExtractor2AppActivity"
-        android:text="@string/rand_extractor" />
+        android:text="@string/min_entropy_sequence" />
 
-    <Button
-        android:id="@+id/button3"
+    <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/button5"
-        android:onClick="moveToGKAProtocolAppActivity"
-        android:text="@string/bluetooth_gka" />
+        android:layout_below="@+id/textView1"
+        android:text="" />
 
-    <Button
-        android:id="@+id/button4"
-        android:layout_width="wrap_content"
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/button3"
-        android:onClick="moveToPublicKeyCryptographyAppActivity"
-        android:text="@string/public_key_cryptography" />
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/textView2" />
 
 </RelativeLayout>

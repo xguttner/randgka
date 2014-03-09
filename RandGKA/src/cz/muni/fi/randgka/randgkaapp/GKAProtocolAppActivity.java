@@ -1,12 +1,6 @@
 package cz.muni.fi.randgka.randgkaapp;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.SecureRandom;
-
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
-import cz.muni.fi.randgka.library.ProtocolBroadcastReceiver;
-import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.tools.Constants;
@@ -22,10 +16,9 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.TextView;
 
-public class GKAProtocolStartAppActivity extends Activity {
+public class GKAProtocolAppActivity extends Activity {
 
 	private ProtocolBroadcastReceiver receiver;
-	private SecureRandom sr;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +39,24 @@ public class GKAProtocolStartAppActivity extends Activity {
 		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
 		protocolFilter.addAction(Constants.GET_GKA_KEY);
 		receiver = new ProtocolBroadcastReceiver();
-		receiver.setTextView((TextView)findViewById(R.id.protocol_participants));
+		receiver.setTextViews((TextView)findViewById(R.id.protocol_participants), (TextView)findViewById(R.id.textView3));
 		LocalBroadcastManager.getInstance(this).registerReceiver(receiver, protocolFilter);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.gkaprotocol, menu);
+		getMenuInflater().inflate(R.menu.empty, menu);
 		return true;
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (CameraMESHolder.cameraMES != null) {
+			CameraMESHolder.cameraMES.stop();
+			CameraMESHolder.cameraMES = null;
+		}
 	}
 
 	public void runProtocol(View view) {

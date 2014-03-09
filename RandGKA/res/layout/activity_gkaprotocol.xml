@@ -8,24 +8,14 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".GKAProtocolActivity" >
 
-    <TextView
-        android:id="@+id/protocol_participants"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <SurfaceView
+        android:id="@+id/surfaceView1"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/empty"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <EditText
-        android:id="@+id/generated_key_input"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/button1"
-        android:ems="10" />
+        android:layout_below="@+id/textView3" />
 
     <Button
         android:id="@+id/button1"
@@ -37,11 +27,41 @@
         android:onClick="runProtocol"
         android:text="@string/run_protocol" />
 
-    <SurfaceView
-        android:id="@+id/surfaceView1"
-        android:layout_alignLeft="@+id/generated_key_input"
-        android:layout_below="@+id/generated_key_input"
-        android:layout_width="1dp"
-        android:layout_height="1dp" />
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/participants" />
+
+    <TextView
+        android:id="@+id/protocol_participants"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textView1"
+        android:text=""
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/button1"
+        android:text="@string/gka_key" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textView2"
+        android:text="" />
     
 </RelativeLayout>
