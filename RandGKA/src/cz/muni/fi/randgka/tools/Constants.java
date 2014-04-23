@@ -9,6 +9,8 @@ public final class Constants {
 	public static final String CONNECT_TO_DEVICE = "cz.muni.fi.androidrandextr.CONNECT_TO_DEVICE";
 
 	public static final String GET_PARTICIPANTS = "cz.muni.fi.androidrandextr.GET_PARTICIPANTS";
+	
+	public static final String GET_PARAMS = "cz.muni.fi.androidrandextr.GET_PARAMS";
 
 	public static final String RETURN_DEVICES = "cz.muni.fi.androidrandextr.RETURN_DEVICES";
 	

@@ -45,7 +45,8 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 			SQUARE_OFFSET = YBLOCK_SIZE / (SQUARE_SIDE*SQUARE_SIDE),
 			FRAME_SKIPPER = 1, // we take every FRAME_SKIPPER-th frame
 			PREPROCESSED_SAMPLE_LENGTH = 4;
-	private ByteSequence sourceData;
+	private ByteSequence sourceData,
+			lastPreprocessedPiece;
 	private CountDownLatch countDownLatch;
 	private boolean preprocessingFlag;
 	private int bytesPerSample,
@@ -164,7 +165,13 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 				else data = new ByteSequence(newData, bytesPerSample*8);
 				
 				// decision about storing the data
-				if (store) fos.write(data.getSequence());
+				if (store) {
+					//TODO: set according to PREPROCESSED_SAMPLE_LENGTH
+					if (currentSample%2 == 1) {
+						data.add(lastPreprocessedPiece);
+						fos.write(data.getSequence());
+					} else lastPreprocessedPiece = data;
+				}
 				else sourceData.add(data);
 				
 				currentSample++;
@@ -206,10 +213,10 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 			columnPixels[noOfSq%SQUARE_MATRIX_WIDTH] = (byte)(0xff & ((int)columnPixels[noOfSq%SQUARE_MATRIX_WIDTH] ^ ((int)inputData[j] ^ (int)inputData[YBLOCK_SIZE+2*(int)(j/4)] ^ (int)inputData[YBLOCK_SIZE+2*(int)(j/4)+1])));
 		}
 		
-		// process columnPixels into four bits
-		for (int i = 0; i < 4; i++) {
-			for (int k = 0; k < 5; k++) { // xoring different columns into one of the four important
-				preprocessedData[i] = (byte)(0xff & ((int)preprocessedData[i] ^ (int)columnPixels[i + k*4]));
+		// process columnPixels into PREPROCESSED_SAMPLE_LENGTH bits
+		for (int i = 0; i < PREPROCESSED_SAMPLE_LENGTH; i++) {
+			for (int k = 0; k < 5; k++) { // xoring different columns into one of the PREPROCESSED_SAMPLE_LENGTH important
+				preprocessedData[i] = (byte)(0xff & ((int)preprocessedData[i] ^ (int)columnPixels[i + k*PREPROCESSED_SAMPLE_LENGTH]));
 			}
 			for (int l = 1; l < 8; l++) { // xoring the bits of one byte to get the outcoming bit (stored as LSB of a byte)
 				byte before = preprocessedData[i];
@@ -222,8 +229,8 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	}
 	
 	@Override
-	public ByteSequence getMinEntropyData(int minEntropyDataLength) {
-		return this.getSourceData(minEntropyDataLength, null, true);
+	public ByteSequence getMinEntropyData(int minEntropyDataLength, File storage) {
+		return this.getSourceData(minEntropyDataLength, storage, true);
 	}
 	
 	public ByteSequence getRawSourceData(int minEntropyDataLength, File storage) {

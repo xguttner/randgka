@@ -8,9 +8,12 @@ import java.util.Arrays;
 import android.util.Log;
 import cz.muni.fi.randgka.tools.MessageAction;
 import cz.muni.fi.randgka.tools.PMessage;
+import cz.muni.fi.randgka.tools.ProtocolType;
 
 public class AugotGKA implements GKAProtocol {
 
+	public static final ProtocolType PROTOCOL_TYPE = ProtocolType.AUGOT;
+	
 	private static final BigInteger p = new BigInteger("ab359aa76a6773ed7a93b214db0c25d0160817b8a893c001c761e198a3694509ebe8"+
 			"7a5313e0349d95083e5412c9fc815bfd61f95ddece43376550fdc624e92ff38a415783b9726120"+
 			"4e05d65731bba1ccff0e84c8cd2097b75feca1029261ae19a389a2e15d2939314b184aef707b82"+

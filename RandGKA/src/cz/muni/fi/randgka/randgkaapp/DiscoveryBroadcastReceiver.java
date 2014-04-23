@@ -13,8 +13,9 @@ public class DiscoveryBroadcastReceiver extends BroadcastReceiver {
 	private Spinner spinner;
 	private ArrayAdapter<BluetoothDevice> devices;
 	
-	public DiscoveryBroadcastReceiver(Spinner spinner) {
+	public DiscoveryBroadcastReceiver(Spinner spinner, ArrayAdapter<BluetoothDevice> devices) {
 		this.spinner = spinner;
+		this.devices = devices;
 	}
 	
 	@Override
@@ -22,13 +23,12 @@ public class DiscoveryBroadcastReceiver extends BroadcastReceiver {
 		String action = intent.getAction();
         if (BluetoothDevice.ACTION_FOUND.equals(action)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            Log.d("device", "found");
             if (spinner != null) {
             	if (devices == null) {
             		devices = new ArrayAdapter<BluetoothDevice>(context, android.R.layout.simple_spinner_item);
             		devices.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             	}
-            	devices.add(device);
+            	if (devices.getPosition(device) == -1) devices.add(device);
         		spinner.setAdapter(devices);
             }
         }

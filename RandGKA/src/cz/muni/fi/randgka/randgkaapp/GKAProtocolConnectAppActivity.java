@@ -50,7 +50,7 @@ public class GKAProtocolConnectAppActivity extends Activity {
 				startActivity(moving);
 			}
 			else {
-				Intent moving = new Intent(this, GKAProtocolAppActivity.class);
+				Intent moving = new Intent(this, BluetoothGKAActivity.class);
 				startActivity(moving);
 			}
 		}
@@ -73,7 +73,7 @@ public class GKAProtocolConnectAppActivity extends Activity {
 	
 	public void actAsClient(View view) {
 		IntentFilter deviceFound = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-		if (discoveryBR == null) discoveryBR = new DiscoveryBroadcastReceiver((Spinner)findViewById(R.id.spinner1));
+		if (discoveryBR == null) discoveryBR = new DiscoveryBroadcastReceiver((Spinner)findViewById(R.id.spinner1), null);
 		registerReceiver(discoveryBR, deviceFound);
 		
 		discoveryRunning = true;
@@ -102,7 +102,7 @@ public class GKAProtocolConnectAppActivity extends Activity {
 	}
 	
 	public void connectToPaired(View view) {
-		Spinner spinner = (Spinner)findViewById(R.id.spinner2);
+		Spinner spinner = (Spinner)findViewById(R.id.spinner6);
 		BluetoothDevice bluetoothDevice = (BluetoothDevice)spinner.getSelectedItem();
 		
 		connectTo(bluetoothDevice);
@@ -118,7 +118,7 @@ public class GKAProtocolConnectAppActivity extends Activity {
 		bpsIntent.putExtra("bluetoothDevice", bluetoothDevice);
 		startService(bpsIntent);
 		
-		Intent moving = new Intent(this, GKAProtocolAppActivity.class);
+		Intent moving = new Intent(this, BluetoothGKAActivity.class);
 		startActivity(moving);
 	}
 	
@@ -126,7 +126,7 @@ public class GKAProtocolConnectAppActivity extends Activity {
 		Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 		// If there are paired devices
 		if (pairedDevices.size() > 0) {
-			Spinner spinnerPaired = (Spinner)findViewById(R.id.spinner2);
+			Spinner spinnerPaired = (Spinner)findViewById(R.id.spinner6);
 			ArrayAdapter<BluetoothDevice> pairedDevicesArray = new ArrayAdapter<BluetoothDevice>(this, android.R.layout.simple_spinner_item);
 			
             pairedDevicesArray.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

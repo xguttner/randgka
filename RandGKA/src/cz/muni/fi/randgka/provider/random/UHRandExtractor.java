@@ -76,7 +76,7 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 		int extractionRounds = (int)Math.ceil((double)length/outputLength);
 		
 		for (int j = 0; j < extractionRounds; j++) {
-			sourceSequence = mes.getMinEntropyData(inputLength-1);
+			sourceSequence = mes.getMinEntropyData(inputLength-1, null);
 			
 			actualSequence = new ByteSequence(new byte[]{(byte)0x80}, 1); //set 1 as the first bit
 			actualSequence.add(sourceSequence);

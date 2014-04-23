@@ -67,21 +67,25 @@ public class MinEntropySourceAppActivity extends Activity {
 	}
 	
 	public void getSourceData(View view) {
-		int outputLength = Integer.parseInt(sp.getString("pref_mes_length", "128"));
+		TextView textView = (TextView) findViewById(R.id.textView2);
 		
-		ByteSequence minEntropySequence = mes.getMinEntropyData(outputLength);
+		int outputLength = Integer.parseInt(sp.getString("pref_mes_length", "128"));
+		ByteSequence minEntropySequence = null;
 		
 		String outFileName = sp.getString("pref_mes_outfile", "");
 		if (outFileName.length() > 0) {
 			String state = Environment.getExternalStorageState();
 		    if (Environment.MEDIA_MOUNTED.equals(state)) {
-		    	File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/randgka/");
-		        File outFile = new File(dir, outFileName);
+		    	File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		    	File outFile = new File(dir, outFileName);
 		        try {
 		        	if ((dir.exists() || dir.mkdir()) && (outFile.exists() || outFile.createNewFile()) && outFile.canWrite()) {
-						FileOutputStream fos = new FileOutputStream(outFile);
+		        		mes.getMinEntropyData(outputLength, outFile);
+		        		String message = "Stored "+outputLength+"bits into: "+outFile.getAbsolutePath();
+		        		textView.setText(message.toCharArray(), 0, message.length());
+		        		/*FileOutputStream fos = new FileOutputStream(outFile);
 				        fos.write(minEntropySequence.getSequence());
-				        fos.close();
+				        fos.close();*/
 		        	} else Log.e("min-entropy", "Storing into external storage failed.");
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
@@ -91,12 +95,13 @@ public class MinEntropySourceAppActivity extends Activity {
 		    } else {
 		    	Log.e("min-entropy", "Storing into external storage failed.");
 		    }
+		} else {
+			minEntropySequence = mes.getMinEntropyData(outputLength, null);
+			BigInteger minEntropyNum = new BigInteger(1, minEntropySequence.getSequence());
+			minEntropyNum.shiftRight(8 - minEntropySequence.getBitLength()%8);
+			textView.setText(minEntropyNum.toString(16).toCharArray(), 0, minEntropyNum.toString(16).toCharArray().length);
 		}
 		
-		BigInteger minEntropyNum = new BigInteger(1, minEntropySequence.getSequence());
-		minEntropyNum.shiftRight(8 - minEntropySequence.getBitLength()%8);
-		TextView textView = (TextView) findViewById(R.id.textView2);
-		textView.setText(minEntropyNum.toString(16).toCharArray(), 0, minEntropyNum.toString(16).toCharArray().length);
 	}
 
 }
