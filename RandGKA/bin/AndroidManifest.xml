@@ -41,13 +41,14 @@
             android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolConnectAppActivity"
             android:label="@string/bluetooth_gka" >
         </activity>
+
         <service
             android:name="cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService"
             android:exported="false" >
         </service>
 
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.BluetoothGKAActivity"
             android:label="@string/title_activity_gkaprotocol" >
         </activity>
         <activity
@@ -59,6 +60,22 @@
             android:label="@string/title_activity_gkaprotocol_print_key_app" >
         </activity>
         <activity android:name="cz.muni.fi.randgka.randgkaapp.SettingsActivity" />
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolChooser"
+            android:label="@string/title_activity_gkaprotocol_chooser" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.BluetoothGKARoleActivity"
+            android:label="@string/title_activity_bluetooth_gkarole" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.BluetoothGKAMemberActivity"
+            android:label="@string/title_activity_bluetooth_gkamember" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.BluetoothGKALeaderActivity"
+            android:label="@string/title_activity_bluetooth_gkaleader" >
+        </activity>
     </application>
 
 </manifest>

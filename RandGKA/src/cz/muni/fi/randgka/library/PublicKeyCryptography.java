@@ -54,24 +54,6 @@ public class PublicKeyCryptography {
         return Base64.encode(getPublicKey().getEncoded(), Base64.DEFAULT);
     }
 	
-	public PublicKey getPublicKey(){
-        String pubKeyStr = sp1.getString(PUBLIC_KEY, "");       
-        byte[] sigBytes = Base64.decode(pubKeyStr, Base64.DEFAULT);
-        Log.d("pcBytes2", Arrays.toString(sigBytes));
-        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(sigBytes);
-        KeyFactory keyFact = null;
-        try {
-            keyFact = KeyFactory.getInstance("RSA", "BC");
-            return  keyFact.generatePublic(x509KeySpec);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
     public String getPublicKeyAsString(){
         return sp1.getString(PUBLIC_KEY, "");       
     }
@@ -87,8 +69,36 @@ public class PublicKeyCryptography {
 		return null;
     }
     
-    public PrivateKey getPrivateKey(){
-        String privKeyStr = sp1.getString(PRIVATE_KEY, "");
+    public PublicKey getPublicKey(){
+        return getPublicKey(publicKeyLength);
+    }
+    public PublicKey getPublicKey(int length){
+        String pubKeyStr = sp1.getString(PUBLIC_KEY+length, "");
+        if (pubKeyStr.equals("")) {
+        	generateKeys(length);
+        	pubKeyStr = sp1.getString(PUBLIC_KEY+length, "");
+        }
+        byte[] sigBytes = Base64.decode(pubKeyStr, Base64.DEFAULT);
+        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(sigBytes);
+        KeyFactory keyFact = null;
+        try {
+            keyFact = KeyFactory.getInstance("RSA", "BC");
+            return  keyFact.generatePublic(x509KeySpec);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public PrivateKey getPrivateKey(int length){
+        String privKeyStr = sp1.getString(PRIVATE_KEY+length, "");
+        if (privKeyStr.equals("")) {
+        	generateKeys(length);
+        	privKeyStr = sp1.getString(PRIVATE_KEY+length, "");
+        }
         byte[] sigBytes = Base64.decode(privKeyStr, Base64.DEFAULT);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(sigBytes);
         KeyFactory keyFact = null;
@@ -104,13 +114,17 @@ public class PublicKeyCryptography {
         }
         return null;
     }
+    public PrivateKey getPrivateKey(){
+        return getPrivateKey(publicKeyLength);
+    }
+    
     public String getPrivateKeyAsString(){
         return sp1.getString(PRIVATE_KEY, "");      
     }
-	public void generateKeys(){
-        try {
+    public void generateKeys(int length) {
+    	try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
-            generator.initialize(publicKeyLength, new SecureRandom()); // replace with my own solution
+            generator.initialize(length, new SecureRandom()); // replace with my own solution
             KeyPair pair = generator.generateKeyPair();
             pubKey = pair.getPublic();
             privKey = pair.getPrivate();
@@ -119,13 +133,16 @@ public class PublicKeyCryptography {
             byte[] privKeyBytes = privKey.getEncoded();
             String privKeyStr = new String(Base64.encode(privKeyBytes, Base64.DEFAULT));            
             spEditor = sp1.edit();
-            spEditor.putString(PUBLIC_KEY, pubKeyStr);
-            spEditor.putString(PRIVATE_KEY, privKeyStr);           
+            spEditor.putString(PUBLIC_KEY+length, pubKeyStr);
+            spEditor.putString(PRIVATE_KEY+length, privKeyStr);           
             spEditor.commit();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchProviderException e) {
             e.printStackTrace();
-        }           
+        } 
+    }
+	public void generateKeys() {
+        generateKeys(publicKeyLength);   
     }
 }

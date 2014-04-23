@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 
 import cz.muni.fi.randgka.tools.PMessage;
+import cz.muni.fi.randgka.tools.ProtocolType;
 
 public interface GKAProtocol {
 	
@@ -14,4 +15,6 @@ public interface GKAProtocol {
 	public GKAProtocolRound nextRound(PMessage message);
 	
 	public BigInteger getKey();
+	
+	public ProtocolType getProtocolType();
 }

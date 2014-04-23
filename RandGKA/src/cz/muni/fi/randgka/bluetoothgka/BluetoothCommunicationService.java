@@ -3,6 +3,7 @@ package cz.muni.fi.randgka.bluetoothgka;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
@@ -23,6 +24,7 @@ import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.MessageAction;
 import cz.muni.fi.randgka.tools.PMessage;
+import cz.muni.fi.randgka.tools.ProtocolType;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -37,7 +39,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Base64;
 import android.util.Log;
 
 public class BluetoothCommunicationService extends Service {
@@ -55,22 +56,45 @@ public class BluetoothCommunicationService extends Service {
 	private Context context;
 	private int newParticipantId;
 	private SharedPreferences sp;
+	private boolean isAuth;
+	private Integer nonceLength,
+					groupKeyLength,
+					publicKeyLength;
 	
 	@Override
 	public void onCreate() {
 		init();
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
-		pHandler = new PMessageHandler();
+		isAuth = sp.getBoolean("pref_gka_authorized", false);
+		nonceLength = Integer.parseInt(sp.getString("pref_gka_nonce_len", "1024"))/8;
+		groupKeyLength = Integer.parseInt(sp.getString("pref_gka_key_len", "1024"))/8;
+		publicKeyLength = Integer.parseInt(sp.getString("pref_public_key_len", "1024"))/8;
+		
 		context = this.getBaseContext();
 		lbm = LocalBroadcastManager.getInstance(this);
 		publicKeyCryptography = new PublicKeyCryptography(context);
 	}
 	
 	private void init() {
+		init(null);
+	}
+	
+	private void init(Intent intent) {
 		participants = new BluetoothGKAParticipants();
 		threads = new HashMap<String, CommunicationThread>();
-		protocol = new AugotGKA();
 		newParticipantId = 0;
+		pHandler = new PMessageHandler();
+		
+		if (intent != null) {
+			isAuth = intent.getBooleanExtra("isAuth", isAuth);
+			nonceLength = intent.getIntExtra("nonceLength", nonceLength*8)/8;
+			groupKeyLength = intent.getIntExtra("groupKeyLength", groupKeyLength*8)/8;
+			publicKeyLength = intent.getIntExtra("publicKeyLength", publicKeyLength*8)/8;
+			
+			if (intent.getStringExtra("protocol").equals("Augot")) {
+				protocol = new AugotGKA();
+			}
+		}
 	}
 	
 	@Override
@@ -78,7 +102,7 @@ public class BluetoothCommunicationService extends Service {
 		String action = intent.getAction();
 		if (action.equals(Constants.SERVER_START)) {
 			try {
-				init();
+				init(intent);
 				actAsServer(this, BluetoothAdapter.getDefaultAdapter());
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -91,21 +115,31 @@ public class BluetoothCommunicationService extends Service {
 			if (listenSocketThread != null) listenSocketThread.interrupt();
 			reset();
 			
-			GKAProtocolParams params = new GKAProtocolParams(sp.getBoolean("pref_gka_authorized", false), 
-					Integer.parseInt(sp.getString("pref_gka_nonce_length", "1024"))/8, 
-					Integer.parseInt(sp.getString("pref_gka_key_length", "1024"))/8, publicKeyCryptography.getPrivateKey());
+			GKAProtocolParams params = new GKAProtocolParams(isAuth, nonceLength, groupKeyLength, publicKeyLength, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
 			
-			Provider pr = new RandGKAProvider();
+			//Provider pr = new RandGKAProvider();
 	        //try {
 				SecureRandom secureRandom = new SecureRandom();// SecureRandom.getInstance("UHRandExtractor", pr);
 				protocol.init(participants, secureRandom, params);
-				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, false, null, null));
+				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, 0, false, null, null));
 				sendRound(firstRound);
 	        /*} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
 			}*/
+		} else if (action.equals(Constants.GET_PARAMS)) {
+			printParams();
 		}
 		return START_NOT_STICKY;
+	}
+	
+	private void printParams() {
+		Intent paramsIntent = new Intent(Constants.GET_PARAMS);
+		paramsIntent.putExtra("protocol", protocol.getClass().getSimpleName());
+		paramsIntent.putExtra("isAuth", isAuth);
+		paramsIntent.putExtra("nonceLength", nonceLength);
+		paramsIntent.putExtra("groupKeyLength", groupKeyLength);
+		paramsIntent.putExtra("publicKeyLength", publicKeyLength);
+		lbm.sendBroadcast(paramsIntent);
 	}
 
 	private void reset() {
@@ -146,13 +180,58 @@ public class BluetoothCommunicationService extends Service {
 	private class PMessageHandler extends Handler {
 		@Override
 		public void handleMessage(Message message) {
+			Log.d("here","d");
 			Bundle bundle = message.getData();
 			if (bundle != null) {
 				PMessage pMessage = (PMessage)bundle.getSerializable("pMessage");
 				if (pMessage != null) {
 					switch (pMessage.getAction()) {
 						
+						case SEND_PARAMS:
+							Log.d("received", pMessage.toString()+" "+pMessage.getLength());
+							if (pMessage.getLength() == 14) {
+								byte[] receivedMessageBytes = pMessage.getMessage();
+								switch (ProtocolType.valueOf(receivedMessageBytes[0])) {
+									case AUGOT:
+										protocol = new AugotGKA();
+										break;
+									default:
+										protocol = new AugotGKA();
+										break;	
+								}
+								isAuth = receivedMessageBytes[1] == (byte)1 ? true : false;
+								
+								byte [] intBytes = new byte[4];
+								System.arraycopy(receivedMessageBytes, 2, intBytes, 0, 4);
+								nonceLength = ByteBuffer.wrap(intBytes).getInt();
+								
+								System.arraycopy(receivedMessageBytes, 6, intBytes, 0, 4);
+								groupKeyLength = ByteBuffer.wrap(intBytes).getInt();
+								
+								System.arraycopy(receivedMessageBytes, 10, intBytes, 0, 4);
+								publicKeyLength = ByteBuffer.wrap(intBytes).getInt();
+								
+								printParams();
+								
+								GKAParticipant me = participants.getMe();
+								me.setDhLen(groupKeyLength);
+								me.setPkLen(publicKeyLength);
+								me.setAuthPublicKey(publicKeyCryptography.getPublicKey(publicKeyLength*8));
+								BluetoothFeatures myBf = participants.getBluetoothFeaturesFor(me.getId());
+								CommunicationThread ct = threads.get(participants.getBluetoothFeaturesFor(participants.getLeader().getId()).getMacAddress());
+								
+								byte[] messageBytes = new byte[me.length()+myBf.length()];
+								System.arraycopy(me.getBytes(), 0, messageBytes, 0, me.length());
+								System.arraycopy(myBf.getBytes(), 0, messageBytes, me.length(), myBf.length());
+	
+								PMessage addParticipantMessage = new PMessage(MessageAction.ADD_PARTICIPANT, (byte)1, (byte)1, me.length()+myBf.length(), 0, false, messageBytes, null);
+						        ct.write(addParticipantMessage.getBytes());
+						        Log.d("sending", addParticipantMessage.toString());
+							}
+							break;
+					
 						case ADD_PARTICIPANT:
+							Log.d("received", "send_params");
 							GKAParticipant participantReceived = new GKAParticipant(pMessage.getMessage());
 							byte[] bfBytes = new byte[pMessage.getLength() - participantReceived.length()];
 							System.arraycopy(pMessage.getMessage(), participantReceived.length(), bfBytes, 0, pMessage.getLength() - participantReceived.length());
@@ -163,14 +242,14 @@ public class BluetoothCommunicationService extends Service {
 							getDevices.putExtra("participants", participants);
 							lbm.sendBroadcast(getDevices);
 							
-							PMessage broadcastParticipantsMessage = new PMessage(MessageAction.BROADCAST_PARTICIPANTS, (byte)0, (byte)0, participants.length(), false, participants.getBytes(), null);
-							CommunicationThread ct = null;
+							PMessage broadcastParticipantsMessage = new PMessage(MessageAction.BROADCAST_PARTICIPANTS, (byte)0, (byte)0, participants.length(), 0, false, participants.getBytes(), null);
+							CommunicationThread ct1 = null;
 							String macAddress = null;
 							for (GKAParticipant p : participants.getAllButMe().getParticipants()) {
 								macAddress = participants.getBluetoothFeaturesFor(p.getId()).getMacAddress();
 								if (threads.containsKey(macAddress)) {
-									ct = threads.get(macAddress);
-									if (ct != null) ct.write(broadcastParticipantsMessage.getBytes());
+									ct1 = threads.get(macAddress);
+									if (ct1 != null) ct1.write(broadcastParticipantsMessage.getBytes());
 								}
 							}
 							
@@ -193,9 +272,7 @@ public class BluetoothCommunicationService extends Service {
 							
 						case INIT_GKA_PROTOCOL:
 							reset();
-							GKAProtocolParams params = new GKAProtocolParams(sp.getBoolean("pref_gka_authorized", false), 
-									Integer.parseInt(sp.getString("pref_gka_nonce_length", "1024"))/8, 
-									Integer.parseInt(sp.getString("pref_gka_key_length", "1024"))/8, publicKeyCryptography.getPrivateKey());
+							GKAProtocolParams params = new GKAProtocolParams(isAuth, nonceLength, groupKeyLength, publicKeyLength, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
 							
 							Provider pr = new RandGKAProvider();
 					        //try {
@@ -215,7 +292,8 @@ public class BluetoothCommunicationService extends Service {
 	
 	public void actAsServer(Context context, BluetoothAdapter bluetoothAdapter) throws IOException {
 		try {
-			GKAParticipant me = new GKAParticipant(0, true, GKAParticipantRole.LEADER, null, publicKeyCryptography.getPublicKey());
+			GKAParticipant me = new GKAParticipant(0, true, GKAParticipantRole.LEADER, groupKeyLength, 
+					publicKeyLength, null, publicKeyCryptography.getPublicKey(publicKeyLength*8));
 			BluetoothFeatures bf = new BluetoothFeatures(bluetoothAdapter.getAddress(), bluetoothAdapter.getName());
 			participants.add(me, bf);
 			threads.put(bf.getMacAddress(), null);
@@ -248,11 +326,28 @@ public class BluetoothCommunicationService extends Service {
 		    	        CommunicationThread ct = new CommunicationThread(bs);
 		    	        ct.start();
 		    	        
-		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, false, GKAParticipantRole.MEMBER, null, null);
+		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, false, GKAParticipantRole.MEMBER, groupKeyLength, 
+		    	        		publicKeyLength, null, null);
 		    			BluetoothFeatures bf = new BluetoothFeatures(bs.getRemoteDevice().getAddress(), bs.getRemoteDevice().getName());
 		    			participants.add(participant, bf);
 		    			threads.put(bf.getMacAddress(), ct);
 		    	        
+		    			// sending params to new participant
+		    			int messageLength = 14;
+		    			byte[] message = new byte[messageLength];
+		    			message[0] = protocol.getProtocolType().getValue();
+		    			message[1] = isAuth ? (byte)1 : (byte)0;
+		    			
+		    			byte [] intBytes = ByteBuffer.allocate(4).putInt(nonceLength).array();
+		    			System.arraycopy(intBytes, 0, message, 2, 4);
+		    			intBytes = ByteBuffer.allocate(4).putInt(groupKeyLength).array();
+		    			System.arraycopy(intBytes, 0, message, 6, 4);
+		    			intBytes = ByteBuffer.allocate(4).putInt(publicKeyLength).array();
+		    			System.arraycopy(intBytes, 0, message, 10, 4);
+		    			
+						PMessage paramsMessage = new PMessage(MessageAction.SEND_PARAMS, (byte)0, (byte)0, messageLength, 0, false, message, null);
+						ct.write(paramsMessage.getBytes());
+		    			
 		    	    }
 	            } catch (IOException e) {
 	            	e.printStackTrace();
@@ -275,7 +370,7 @@ public class BluetoothCommunicationService extends Service {
 	
 	public void connectToServer(BluetoothDevice bluetoothDevice, Context context) {
 		try {
-            // MY_UUID is the app's UUID string, also used by the server code
+            // GKA_UUID is the app's UUID string, also used by the server code
             BluetoothSocket bs = bluetoothDevice.createRfcommSocketToServiceRecord(GKA_UUID);
             
             bs.connect();
@@ -283,21 +378,15 @@ public class BluetoothCommunicationService extends Service {
 	        CommunicationThread ct = new CommunicationThread(bs);
 	        ct.start();
 	        
-	        GKAParticipant participant = new GKAParticipant(0, false, GKAParticipantRole.LEADER, null, null);
+	        GKAParticipant participant = new GKAParticipant(0, false, GKAParticipantRole.LEADER, groupKeyLength, publicKeyLength, null, null);
 			BluetoothFeatures bf = new BluetoothFeatures(bluetoothDevice.getAddress(), bluetoothDevice.getName());
 			participants.add(participant, bf);
 			threads.put(bf.getMacAddress(), ct);
 	        
-			GKAParticipant me = new GKAParticipant(1, true, GKAParticipantRole.MEMBER, null, publicKeyCryptography.getPublicKey());
+			GKAParticipant me = new GKAParticipant(1, true, GKAParticipantRole.MEMBER, groupKeyLength, publicKeyLength, null, null);
 			BluetoothFeatures myBf = new BluetoothFeatures(BluetoothAdapter.getDefaultAdapter().getAddress(), BluetoothAdapter.getDefaultAdapter().getName());
 			participants.add(me, myBf);
 			threads.put(myBf.getMacAddress(), null);
-	        
-			byte[] messageBytes = new byte[me.length()+myBf.length()];
-			System.arraycopy(me.getBytes(), 0, messageBytes, 0, me.length());
-			System.arraycopy(myBf.getBytes(), 0, messageBytes, me.length(), myBf.length());
-
-	        ct.write((new PMessage(MessageAction.ADD_PARTICIPANT, (byte)1, (byte)1, me.length()+myBf.length(), false, messageBytes, null)).getBytes());
 			
         } catch (IOException e) {
         	e.printStackTrace();
@@ -339,7 +428,7 @@ public class BluetoothCommunicationService extends Service {
 	                // Read from the InputStream
 	                bytes = inStream.read(buffer);
 	                PMessage pMessage = new PMessage(buffer);
-	                
+	                Log.d("pMessage", pMessage.toString());
 	                Arrays.fill(buffer, (byte) 0x00);
 	                
 	                Message m = pHandler.obtainMessage();
@@ -349,7 +438,9 @@ public class BluetoothCommunicationService extends Service {
 	                
 	        		m.setData(pMessageBundle);
 	                m.sendToTarget();
+	                Log.d("sent", "toTar");
 	            } catch (IOException e) {
+	            	Log.d("exc", "sending");
 	                break;
 	            }
 	        }

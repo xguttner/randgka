@@ -23,41 +23,54 @@ public class GKAParticipant implements Byteable {
 	private GKAParticipantRole role;
 	private BigInteger dhPublickKey;
 	private PublicKey authPublicKey;
+	private int pkLen,
+				dhLen;
 	
-	private static final int STATIC_LENGTH = 6;
-	private int publicKeyLength;
-	private static final int AUTH_PUBLIC_KEY_LENGTH = 5;
+	private static final int STATIC_LENGTH = 14;
 	
 	public GKAParticipant() {
-		setPublicKeyLength();
 	}
 	
-	public GKAParticipant(int id, boolean me, GKAParticipantRole role, BigInteger dhPublicKey, PublicKey authPublicKey) {
-		setPublicKeyLength();
+	public GKAParticipant(int id, boolean me, GKAParticipantRole role, int pkLen, int dhLen, BigInteger dhPublicKey, PublicKey authPublicKey) {
 		this.id = id;
 		this.me = me;
 		this.role = role;
+		this.pkLen = pkLen;
+		this.dhLen = dhLen;
 		this.dhPublickKey = dhPublicKey;
 		this.authPublicKey = authPublicKey;
 	}
 
 	public GKAParticipant(byte[] bytes) {
-		setPublicKeyLength();
 		fromBytes(bytes);
 	}
 	
-	private void setPublicKeyLength() {
-		switch (Constants.PKEY_LENGTH) {
-			case 256: 
-				publicKeyLength = 86;
+	private int transPKLen(int pkLen) {
+		switch (pkLen) {
+			case 32: 
+				pkLen = 86;
 				break;
-			case 512:
-				publicKeyLength = 130;
+			case 64:
+				pkLen = 130;
+				break;
+			case 128:
+				pkLen = 218;
+				break;
+			case 2048:
+				pkLen = 394;
+				break;
+			case 4096:
+				pkLen = 746;
 				break;
 			default:
-				publicKeyLength = 86;
+				pkLen = 86;
 				break;
 		}
+		return pkLen;
+	}
+	
+	private int transDHLen(int dhLen) {
+		return 0;
 	}
 	
 	public int getId() {
@@ -74,6 +87,30 @@ public class GKAParticipant implements Byteable {
 
 	public void setMe(boolean me) {
 		this.me = me;
+	}
+	
+	public BigInteger getDhPublickKey() {
+		return dhPublickKey;
+	}
+
+	public void setDhPublickKey(BigInteger dhPublickKey) {
+		this.dhPublickKey = dhPublickKey;
+	}
+
+	public int getPkLen() {
+		return pkLen;
+	}
+
+	public void setPkLen(int pkLen) {
+		this.pkLen = pkLen;
+	}
+
+	public int getDhLen() {
+		return dhLen;
+	}
+
+	public void setDhLen(int dhLen) {
+		this.dhLen = 0;
 	}
 
 	public GKAParticipantRole getRole() {
@@ -96,6 +133,7 @@ public class GKAParticipant implements Byteable {
 		return authPublicKey;
 	}
 	public void setAuthPublicKey(PublicKey authPublicKey) {
+		Log.d("set", Arrays.toString(Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT)));
 		this.authPublicKey = authPublicKey;
 	}
 	
@@ -131,45 +169,57 @@ public class GKAParticipant implements Byteable {
 	public byte[] getBytes() {
 		byte[] bytes = new byte[length()];
 		
-		byte [] idBytes = ByteBuffer.allocate(4).putInt(id).array();
-		System.arraycopy(idBytes, 0, bytes, 0, 4);
+		byte [] intBytes = ByteBuffer.allocate(4).putInt(id).array();
+		System.arraycopy(intBytes, 0, bytes, 0, 4);
 		
 		bytes[4] = (byte)(me?1:0);
 		bytes[5] = role.getValue();
 		
+		intBytes = ByteBuffer.allocate(4).putInt(dhLen).array();
+		System.arraycopy(intBytes, 0, bytes, 6, 4);
+		
+		intBytes = ByteBuffer.allocate(4).putInt(pkLen).array();
+		System.arraycopy(intBytes, 0, bytes, 10, 4);
+		
 		if (dhPublickKey != null) {
 			byte[] pcBytes = Base64.encode(dhPublickKey.toByteArray(), Base64.DEFAULT);
-			System.arraycopy(pcBytes, 0, bytes, 6, AUTH_PUBLIC_KEY_LENGTH);
+			System.arraycopy(pcBytes, 0, bytes, STATIC_LENGTH, transDHLen(dhLen));
 		}
-		
-		if (authPublicKey != null) System.arraycopy(Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT), 0, bytes, 6+AUTH_PUBLIC_KEY_LENGTH, publicKeyLength);
+		Log.d("len", pkLen+" "+Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT).length);
+		if (authPublicKey != null) System.arraycopy(Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT), 0, bytes, STATIC_LENGTH+transDHLen(dhLen), transPKLen(pkLen));
 		
 		return bytes;
 	}
 
 	@Override
 	public int length() {
-		return STATIC_LENGTH+AUTH_PUBLIC_KEY_LENGTH+publicKeyLength;
+		return STATIC_LENGTH+transDHLen(dhLen)+transPKLen(pkLen);
 	}
 
 	@Override
 	public void fromBytes(byte[] bytes) {
 		
-		byte [] idBytes = new byte[4];
-		System.arraycopy(bytes, 0, idBytes, 0, 4);
-		id = ByteBuffer.wrap(idBytes).getInt();
+		byte [] intBytes = new byte[4];
+		System.arraycopy(bytes, 0, intBytes, 0, 4);
+		id = ByteBuffer.wrap(intBytes).getInt();
 		
 		me = (bytes[4]!=0);
 		role = GKAParticipantRole.valueOf(bytes[5]);
 		
-		byte[]pcBytes = new byte[AUTH_PUBLIC_KEY_LENGTH];
-		System.arraycopy(bytes, 6, pcBytes, 0, AUTH_PUBLIC_KEY_LENGTH);
+		System.arraycopy(bytes, 6, intBytes, 0, 4);
+		dhLen = ByteBuffer.wrap(intBytes).getInt();
+		
+		System.arraycopy(bytes, 10, intBytes, 0, 4);
+		pkLen = ByteBuffer.wrap(intBytes).getInt();
+		
+		byte[]pcBytes = new byte[transDHLen(dhLen)];
+		System.arraycopy(bytes, 14, pcBytes, 0, transDHLen(dhLen));
 		dhPublickKey = new BigInteger(1, pcBytes);
 		
 		try {
-			pcBytes = new byte[publicKeyLength];
-			System.arraycopy(bytes, 6+AUTH_PUBLIC_KEY_LENGTH, pcBytes, 0, publicKeyLength);
-			Log.d("pcB", Arrays.toString(pcBytes));
+			pcBytes = new byte[transPKLen(pkLen)];
+			System.arraycopy(bytes, STATIC_LENGTH+transDHLen(dhLen), pcBytes, 0, transPKLen(pkLen));
+			Log.d("from", pkLen+" "+Arrays.toString(pcBytes));
 			pcBytes = Base64.decode(pcBytes, Base64.DEFAULT);
 			authPublicKey = KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(pcBytes));
 		} catch (InvalidKeySpecException e) {

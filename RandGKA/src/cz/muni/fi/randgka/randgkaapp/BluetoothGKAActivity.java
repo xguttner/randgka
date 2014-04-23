@@ -14,16 +14,45 @@ import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
-public class GKAProtocolAppActivity extends Activity {
+public class BluetoothGKAActivity extends Activity {
 
 	private ProtocolBroadcastReceiver receiver;
+	private boolean isLeader = false;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gkaprotocol);
+		
+		TextView protocolTV = (TextView)findViewById(R.id.textView3);
+		TextView versionTV = (TextView)findViewById(R.id.textView15);
+		TextView nonceLengthTV = (TextView)findViewById(R.id.textView6);
+		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
+		TextView publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
+		TextView protocolParticipantsTV = (TextView)findViewById(R.id.protocol_participants);
+		TextView gkaTV = (TextView)findViewById(R.id.textView12);
+		IntentFilter protocolFilter = new IntentFilter();
+		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
+		protocolFilter.addAction(Constants.GET_GKA_KEY);
+		protocolFilter.addAction(Constants.GET_PARAMS);
+		receiver = new ProtocolBroadcastReceiver();
+		receiver.setTextViews(protocolParticipantsTV, gkaTV, protocolTV, versionTV, nonceLengthTV, groupKeyLengthTV, publicKeyLengthTV);
+		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+		lbm.registerReceiver(receiver, protocolFilter);
+		
+		if (this.getIntent().getBooleanExtra("isLeader", false)) {
+			isLeader = true;
+			
+			Intent paramsIntent = new Intent(this, BluetoothCommunicationService.class);
+			paramsIntent.setAction(Constants.GET_PARAMS);
+			startService(paramsIntent);
+		}
+		
+		Button runButton = (Button)findViewById(R.id.button1);
+		runButton.setClickable(isLeader);
 		
 		SurfaceView surface = null;
 		
@@ -34,13 +63,6 @@ public class GKAProtocolAppActivity extends Activity {
         CameraMES cameraMES = new CameraMES();
         cameraMES.initialize(surface);
         CameraMESHolder.cameraMES = cameraMES;
-		
-		IntentFilter protocolFilter = new IntentFilter();
-		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
-		protocolFilter.addAction(Constants.GET_GKA_KEY);
-		receiver = new ProtocolBroadcastReceiver();
-		receiver.setTextViews((TextView)findViewById(R.id.protocol_participants), (TextView)findViewById(R.id.textView3));
-		LocalBroadcastManager.getInstance(this).registerReceiver(receiver, protocolFilter);
 	}
 
 	@Override

@@ -9,6 +9,7 @@ public class GKAProtocolParams {
 	
 	private boolean authenticated; // version of the protocol to use - authenticated / non-authenticated
 	private int nonceLength, // length of the nonce to be used
+			publicKeyLength, 
 			keyLength; // length of the desired shared key
 	private PrivateKey privateKey;
 	
@@ -16,11 +17,12 @@ public class GKAProtocolParams {
 		super();
 	}
 	public GKAProtocolParams(boolean authenticated, int nonceLength,
-			int keyLength, PrivateKey privateKey) {
+			int keyLength, int publicKeyLength, PrivateKey privateKey) {
 		super();
 		this.authenticated = authenticated;
 		this.nonceLength = nonceLength;
 		this.keyLength = keyLength;
+		this.publicKeyLength = publicKeyLength;
 		this.privateKey = privateKey;
 	}
 	public boolean isAuthenticated() {
@@ -40,6 +42,12 @@ public class GKAProtocolParams {
 	}
 	public void setKeyLength(int keyLength) {
 		this.keyLength = keyLength;
+	}
+	public int getPublicKeyLength() {
+		return publicKeyLength;
+	}
+	public void setPublicKeyLength(int publicKeyLength) {
+		this.publicKeyLength = publicKeyLength;
 	}
 	public PrivateKey getPrivateKey() {
 		return privateKey;

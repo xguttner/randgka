@@ -37,7 +37,7 @@ public interface MinEntropySource {
 	 * @param minEntropyDataLength length of the data to gain in bits
 	 * @return the ByteSequence of the preprocessed data
 	 */
-	public ByteSequence getMinEntropyData(int minEntropyDataLength);
+	public ByteSequence getMinEntropyData(int minEntropyDataLength, File storage);
 	
 	/**
 	 * @param usingPreprocessing

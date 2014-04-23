@@ -22,13 +22,14 @@ public class PMessage implements Serializable, Byteable {
 	
 	private static final long serialVersionUID = 7176163014773441688L;
 
-	private static final int STATIC_LENGTH = 11;
+	private static final int STATIC_LENGTH = 15;
 	private static String signAlg = "SHA256withRSA";
 	
 	private MessageAction action;
 	private byte roundNo;
 	private int originatorId;
 	private int length;
+	private int sigLength;
 	private boolean signed;
 	private byte[] message;
 	private byte[] signature;
@@ -42,11 +43,12 @@ public class PMessage implements Serializable, Byteable {
 		fromBytes(pMessageInBytes);
 	}
 
-	public PMessage(MessageAction action, byte roundNo, int originatorId, int length, boolean signed, byte[] message, byte[] signature) {
+	public PMessage(MessageAction action, byte roundNo, int originatorId, int length, int sigLength, boolean signed, byte[] message, byte[] signature) {
 		this.action = action;
 		this.roundNo = roundNo;
 		this.originatorId = originatorId;
 		this.length = length;
+		this.sigLength = sigLength;
 		this.signed = signed;
 		this.message = message;
 		this.signature = signature;
@@ -64,6 +66,7 @@ public class PMessage implements Serializable, Byteable {
 	
 	private byte[] getBytesNoSignature() {
 		byte[] lengthBytes = ByteBuffer.allocate(4).putInt(length).array();
+		byte[] sigLengthBytes = ByteBuffer.allocate(4).putInt(sigLength).array();
 		
 		byte[] rv = new byte[length+STATIC_LENGTH];
 		rv[0] = action.getValue();
@@ -73,8 +76,9 @@ public class PMessage implements Serializable, Byteable {
 		
 		System.arraycopy(originatorIdBytes, 0, rv, 2, 4);
 		System.arraycopy(lengthBytes, 0, rv, 6, 4);
+		System.arraycopy(sigLengthBytes, 0, rv, 10, 4);
 		
-		rv[10] = (byte)((signed)?1:0);
+		rv[14] = (byte)((signed)?1:0);
 		
 		System.arraycopy(message, 0, rv, STATIC_LENGTH, length);
 		
@@ -87,11 +91,9 @@ public class PMessage implements Serializable, Byteable {
 		
 		System.arraycopy(noSig, 0, rv, 0, length+STATIC_LENGTH);
 		
-		if (signed && signature != null) System.arraycopy(signature, 0, rv, length+STATIC_LENGTH, Constants.PKEY_LENGTH/8);
+		if (signed && signature != null) System.arraycopy(signature, 0, rv, length+STATIC_LENGTH, sigLength);
 		
 		rv = Base64.encode(rv, Base64.DEFAULT);
-		
-		//Log.d("push", this.toString());
 		
 		return rv;
 	}
@@ -126,6 +128,14 @@ public class PMessage implements Serializable, Byteable {
 
 	public void setLength(int length) {
 		this.length = length;
+	}
+	
+	public int getSigLength() {
+		return sigLength;
+	}
+
+	public void setSigLength(int sigLength) {
+		this.sigLength = sigLength;
 	}
 
 	public byte[] getMessage() {
@@ -203,7 +213,7 @@ public class PMessage implements Serializable, Byteable {
 
 	@Override
 	public int length() {
-		return length + STATIC_LENGTH + (signed?Constants.PKEY_LENGTH/8:0);
+		return length + STATIC_LENGTH + (signed?sigLength:0);
 	}
 
 	@Override
@@ -221,17 +231,19 @@ public class PMessage implements Serializable, Byteable {
 		System.arraycopy(pMessageInBytes, 6, lengthBytes, 0, 4);
 		length = ByteBuffer.wrap(lengthBytes).getInt();
 		
-		signed = (pMessageInBytes[10] == (byte)1)?true:false;
+		byte[] sigLengthBytes = new byte[4];
+		System.arraycopy(pMessageInBytes, 10, sigLengthBytes, 0, 4);
+		sigLength = ByteBuffer.wrap(sigLengthBytes).getInt();
+		
+		signed = (pMessageInBytes[14] == (byte)1)?true:false;
 		
 		message = new byte[length];
-		System.arraycopy(pMessageInBytes, 11, message, 0, length);
+		System.arraycopy(pMessageInBytes, 15, message, 0, length);
 		
 		if (signed) {
-			signature = new byte[Constants.PKEY_LENGTH/8];
-			System.arraycopy(pMessageInBytes, length+11, signature, 0, Constants.PKEY_LENGTH/8);
+			signature = new byte[sigLength];
+			System.arraycopy(pMessageInBytes, length+15, signature, 0, sigLength);
 		}
-		
-		//Log.d("pull", this.toString());
 		
 	}
 	

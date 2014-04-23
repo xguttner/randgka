@@ -47,7 +47,7 @@
         android:layout_below="@+id/textView1" />
 
     <Spinner
-        android:id="@+id/spinner2"
+        android:id="@+id/spinner6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/spinner2"
+        android:layout_below="@+id/spinner6"
         android:text="@string/connect"
         android:onClick="connectToPaired" />
 
@@ -68,7 +68,7 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/spinner2"
+        android:layout_alignLeft="@+id/spinner6"
         android:layout_below="@+id/button3"
         android:layout_marginTop="15dp"
         android:text="@string/paired_devices" />

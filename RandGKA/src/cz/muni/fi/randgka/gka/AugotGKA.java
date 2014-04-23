@@ -8,9 +8,12 @@ import java.util.Arrays;
 import android.util.Log;
 import cz.muni.fi.randgka.tools.MessageAction;
 import cz.muni.fi.randgka.tools.PMessage;
+import cz.muni.fi.randgka.tools.ProtocolType;
 
 public class AugotGKA implements GKAProtocol {
 
+	private static final ProtocolType PROTOCOL_TYPE = ProtocolType.AUGOT;
+	
 	private static final BigInteger p = new BigInteger("ab359aa76a6773ed7a93b214db0c25d0160817b8a893c001c761e198a3694509ebe8"+
 			"7a5313e0349d95083e5412c9fc815bfd61f95ddece43376550fdc624e92ff38a415783b9726120"+
 			"4e05d65731bba1ccff0e84c8cd2097b75feca1029261ae19a389a2e15d2939314b184aef707b82"+
@@ -64,6 +67,7 @@ public class AugotGKA implements GKAProtocol {
 	public GKAProtocolRound nextRound(PMessage message) {
 		
 		if (message.getRoundNo() != 0 && gkaProtocolParams.isAuthenticated()) {
+			Log.d("pubkey", participants.getParticipant(message.getOriginatorId()).getAuthPublicKey().toString());
 			if (!message.selfVerify(participants.getParticipant(message.getOriginatorId()).getAuthPublicKey())) {
 				GKAProtocolRound gkaProtocolRound = new GKAProtocolRound();
 				gkaProtocolRound.setActionCode(GKAProtocolRound.ERROR);
@@ -107,6 +111,7 @@ public class AugotGKA implements GKAProtocol {
 		pMessage.setRoundNo((byte)1);
 		pMessage.setAction(MessageAction.INIT_GKA_PROTOCOL);
 		pMessage.setOriginatorId(participants.getMe().getId());
+		pMessage.setSigLength(gkaProtocolParams.getPublicKeyLength());
 		
 		nonce = new byte[gkaProtocolParams.getNonceLength()];
 		secureRandom.nextBytes(nonce);
@@ -117,6 +122,7 @@ public class AugotGKA implements GKAProtocol {
 		if (gkaProtocolParams.isAuthenticated()) pMessage.selfSign(gkaProtocolParams.getPrivateKey(), null);
 		
 		round.put(participants.getAllButMe(), pMessage);
+
 		return round;
 	}
 
@@ -128,6 +134,7 @@ public class AugotGKA implements GKAProtocol {
 		pMessage.setRoundNo((byte)2);
 		pMessage.setAction(MessageAction.GKA_PROTOCOL);
 		pMessage.setOriginatorId(participants.getMe().getId());
+		pMessage.setSigLength(gkaProtocolParams.getPublicKeyLength());
 		
 		nonce = new byte[gkaProtocolParams.getNonceLength()];
 		secureRandom.nextBytes(nonce);
@@ -195,7 +202,7 @@ public class AugotGKA implements GKAProtocol {
 					byte[] messageArray = new byte[secondRoundBroadcastLength + gkaProtocolParams.getNonceLength()];
 					System.arraycopy(nonce, 0, messageArray, 0, gkaProtocolParams.getNonceLength());
 					System.arraycopy(secondRoundBroadcast, 0, messageArray, gkaProtocolParams.getNonceLength(), secondRoundBroadcastLength);
-					
+					pMessage.setSigLength(gkaProtocolParams.getPublicKeyLength());
 					pMessage.setLength(secondRoundBroadcastLength + gkaProtocolParams.getNonceLength());
 					pMessage.setMessage(messageArray);
 						
@@ -265,5 +272,10 @@ public class AugotGKA implements GKAProtocol {
 
 	public boolean isInitialized() {
 		return initialized;
+	}
+
+	@Override
+	public ProtocolType getProtocolType() {
+		return PROTOCOL_TYPE;
 	}
 }
