@@ -7,9 +7,12 @@ import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -32,8 +35,9 @@ public class BluetoothGKAActivity extends Activity {
 		TextView nonceLengthTV = (TextView)findViewById(R.id.textView6);
 		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
 		TextView publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
-		TextView protocolParticipantsTV = (TextView)findViewById(R.id.protocol_participants);
+		TextView protocolParticipantsTV = (TextView)findViewById(R.id.textView13);
 		TextView gkaTV = (TextView)findViewById(R.id.textView12);
+		
 		IntentFilter protocolFilter = new IntentFilter();
 		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
 		protocolFilter.addAction(Constants.GET_GKA_KEY);
@@ -42,6 +46,21 @@ public class BluetoothGKAActivity extends Activity {
 		receiver.setTextViews(protocolParticipantsTV, gkaTV, protocolTV, versionTV, nonceLengthTV, groupKeyLengthTV, publicKeyLengthTV);
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
 		lbm.registerReceiver(receiver, protocolFilter);
+		
+		IntentFilter returnKeyFilter = new IntentFilter();
+		returnKeyFilter.addAction(Constants.RETURN_GKA_KEY);
+		BroadcastReceiver rkReceiver = new BroadcastReceiver() {
+			
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				Log.d("try", "to return");
+				Intent result = new Intent();       
+				result.putExtra("key", intent.getByteArrayExtra("key"));
+				BluetoothGKAActivity.this.setResult(Activity.RESULT_OK, result);
+				finish();
+			}
+		};
+		lbm.registerReceiver(rkReceiver, returnKeyFilter);
 		
 		if (this.getIntent().getBooleanExtra("isLeader", false)) {
 			isLeader = true;

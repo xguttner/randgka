@@ -3,6 +3,7 @@ package cz.muni.fi.randgka.randgkaapp;
 import java.util.Set;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
+import cz.muni.fi.randgka.tools.BluetoothDeviceToDisplay;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
@@ -18,7 +19,7 @@ import android.widget.Spinner;
 
 public class BluetoothGKAMemberActivity extends Activity {
 
-	private ArrayAdapter<BluetoothDevice> devices;
+	private ArrayAdapter<BluetoothDeviceToDisplay> devices;
 	private Spinner spinner;
 	private boolean discoveryRunning;
 	private BluetoothAdapter bluetoothAdapter;
@@ -34,12 +35,12 @@ public class BluetoothGKAMemberActivity extends Activity {
 		enableBluetooth();
 		
 		spinner = (Spinner)findViewById(R.id.spinner1);
-		devices = new ArrayAdapter<BluetoothDevice>(this, android.R.layout.simple_spinner_item);
+		devices = new ArrayAdapter<BluetoothDeviceToDisplay>(this, android.R.layout.simple_spinner_item);
 		devices.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 		for (BluetoothDevice device : pairedDevices) {
 	        // Add the name and address to an array adapter to show in a ListView
-	        devices.add(device);
+	        devices.add(new BluetoothDeviceToDisplay(device));
 	    }
 	    spinner.setAdapter(devices);
 	    
@@ -96,7 +97,8 @@ public class BluetoothGKAMemberActivity extends Activity {
 	
 	public void connectTo(View view) {
 		Spinner spinner = (Spinner)findViewById(R.id.spinner1);
-		BluetoothDevice bluetoothDevice = (BluetoothDevice)spinner.getSelectedItem();
+		
+		BluetoothDevice bluetoothDevice = ((BluetoothDeviceToDisplay)spinner.getSelectedItem()).getBluetoothDevice();
 		
 		// stop discovery
 		if (discoveryRunning) {
@@ -108,10 +110,15 @@ public class BluetoothGKAMemberActivity extends Activity {
 		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
 		bpsIntent.setAction(Constants.CONNECT_TO_DEVICE);
 		bpsIntent.putExtra("bluetoothDevice", bluetoothDevice);
+		
+		if (getIntent().getBooleanExtra("return_key", false)) {
+			bpsIntent.putExtra("return_key", true);
+		}
+		
 		startService(bpsIntent);
 		
 		Intent moving = new Intent(this, BluetoothGKAActivity.class);
 		startActivity(moving);
 	}
-	
+ 
 }

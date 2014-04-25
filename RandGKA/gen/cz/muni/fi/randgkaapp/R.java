@@ -31,7 +31,7 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f0b0022;
+        public static final int action_settings=0x7f0b0023;
         public static final int button1=0x7f0b0000;
         public static final int button2=0x7f0b0001;
         public static final int button3=0x7f0b0002;
@@ -39,7 +39,8 @@ public final class R {
         public static final int button5=0x7f0b001e;
         public static final int certificate_input=0x7f0b0020;
         public static final int editText1=0x7f0b001d;
-        public static final int menu_settings=0x7f0b0023;
+        public static final int laptop=0x7f0b0022;
+        public static final int menu_settings=0x7f0b0024;
         public static final int protocol_participants=0x7f0b0013;
         public static final int radio0=0x7f0b0010;
         public static final int radio1=0x7f0b0011;
@@ -53,11 +54,11 @@ public final class R {
         public static final int surfaceView=0x7f0b001f;
         public static final int surfaceView1=0x7f0b0012;
         public static final int textView1=0x7f0b0004;
-        public static final int textView10=0x7f0b0019;
-        public static final int textView11=0x7f0b001a;
+        public static final int textView10=0x7f0b001a;
+        public static final int textView11=0x7f0b001b;
         public static final int textView12=0x7f0b0014;
-        public static final int textView13=0x7f0b001b;
-        public static final int textView14=0x7f0b0017;
+        public static final int textView13=0x7f0b0017;
+        public static final int textView14=0x7f0b0018;
         public static final int textView15=0x7f0b001c;
         public static final int textView2=0x7f0b0006;
         public static final int textView3=0x7f0b000b;
@@ -65,7 +66,7 @@ public final class R {
         public static final int textView5=0x7f0b0009;
         public static final int textView6=0x7f0b000a;
         public static final int textView7=0x7f0b0015;
-        public static final int textView8=0x7f0b0018;
+        public static final int textView8=0x7f0b0019;
         public static final int textView9=0x7f0b0016;
     }
     public static final class layout {
@@ -85,6 +86,8 @@ public final class R {
         public static final int activity_rand_extractor=0x7f03000d;
         public static final int activity_rand_extractor_app=0x7f03000e;
         public static final int activity_random_extractor=0x7f03000f;
+        public static final int child_layout=0x7f030010;
+        public static final int group_layout=0x7f030011;
     }
     public static final class menu {
         public static final int authentication=0x7f0a0000;

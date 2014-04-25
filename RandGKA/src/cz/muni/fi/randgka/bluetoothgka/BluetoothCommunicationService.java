@@ -60,6 +60,7 @@ public class BluetoothCommunicationService extends Service {
 	private Integer nonceLength,
 					groupKeyLength,
 					publicKeyLength;
+	private boolean returnKey;
 	
 	@Override
 	public void onCreate() {
@@ -80,6 +81,7 @@ public class BluetoothCommunicationService extends Service {
 	}
 	
 	private void init(Intent intent) {
+		returnKey = false;
 		participants = new BluetoothGKAParticipants();
 		threads = new HashMap<String, CommunicationThread>();
 		newParticipantId = 0;
@@ -103,12 +105,14 @@ public class BluetoothCommunicationService extends Service {
 		if (action.equals(Constants.SERVER_START)) {
 			try {
 				init(intent);
+				if (intent.getBooleanExtra("return_key", false)) returnKey = true;
 				actAsServer(this, BluetoothAdapter.getDefaultAdapter());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if (action.equals(Constants.CONNECT_TO_DEVICE)) {
 			init();
+			if (intent.getBooleanExtra("return_key", false)) returnKey = true;
 			BluetoothDevice bluetoothDevice = (BluetoothDevice) intent.getParcelableExtra("bluetoothDevice");
 			connectToServer(bluetoothDevice, this);
 		} else if (action.equals(Constants.RUN_GKA_PROTOCOL)) {
@@ -153,7 +157,8 @@ public class BluetoothCommunicationService extends Service {
 	private void sendRound(GKAProtocolRound pr) {
 		if (pr != null) {
 			if (pr.getActionCode() == GKAProtocolRound.SUCCESS) {
-				printKey();
+				if (returnKey) returnKey();
+				else printKey();
 			}
 			if (pr.getMessages() != null && threads != null) {
 				for (Entry<GKAParticipant, PMessage> e : pr.getMessages().entrySet()) {
@@ -162,6 +167,13 @@ public class BluetoothCommunicationService extends Service {
 				}
 			}
 		}
+	}
+	
+	private void returnKey() {
+		Log.d("ret", "key");
+		Intent returnKeyIntent = new Intent(Constants.RETURN_GKA_KEY);
+		returnKeyIntent.putExtra("key", protocol.getKey().toByteArray());
+	    lbm.sendBroadcast(returnKeyIntent);
 	}
 	
 	private void printKey() {

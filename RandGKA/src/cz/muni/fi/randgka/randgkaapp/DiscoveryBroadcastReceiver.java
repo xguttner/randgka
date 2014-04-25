@@ -1,5 +1,6 @@
 package cz.muni.fi.randgka.randgkaapp;
 
+import cz.muni.fi.randgka.tools.BluetoothDeviceToDisplay;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,9 +12,9 @@ import android.widget.Spinner;
 public class DiscoveryBroadcastReceiver extends BroadcastReceiver {
 
 	private Spinner spinner;
-	private ArrayAdapter<BluetoothDevice> devices;
+	private ArrayAdapter<BluetoothDeviceToDisplay> devices;
 	
-	public DiscoveryBroadcastReceiver(Spinner spinner, ArrayAdapter<BluetoothDevice> devices) {
+	public DiscoveryBroadcastReceiver(Spinner spinner, ArrayAdapter<BluetoothDeviceToDisplay> devices) {
 		this.spinner = spinner;
 		this.devices = devices;
 	}
@@ -25,10 +26,10 @@ public class DiscoveryBroadcastReceiver extends BroadcastReceiver {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             if (spinner != null) {
             	if (devices == null) {
-            		devices = new ArrayAdapter<BluetoothDevice>(context, android.R.layout.simple_spinner_item);
+            		devices = new ArrayAdapter<BluetoothDeviceToDisplay>(context, android.R.layout.simple_spinner_item);
             		devices.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             	}
-            	if (devices.getPosition(device) == -1) devices.add(device);
+            	if (devices.getPosition(new BluetoothDeviceToDisplay(device)) == -1) devices.add(new BluetoothDeviceToDisplay(device));
         		spinner.setAdapter(devices);
             }
         }

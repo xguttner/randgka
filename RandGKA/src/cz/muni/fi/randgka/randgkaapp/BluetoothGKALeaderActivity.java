@@ -90,6 +90,7 @@ public class BluetoothGKALeaderActivity extends Activity {
 			else {
 				Intent moving = new Intent(this, BluetoothGKAActivity.class);
 				moving.putExtra("isLeader", true);
+				moving.setFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT);
 				startActivity(moving);
 			}
 		}
@@ -134,6 +135,12 @@ public class BluetoothGKALeaderActivity extends Activity {
 		bpsIntent.putExtra("isAuth", rb.isChecked());
 		
 		bpsIntent.setAction(Constants.SERVER_START);
+		
+		if (getIntent().getBooleanExtra("return_key", false)) {
+			bpsIntent.putExtra("return_key", true);
+		}
+		else bpsIntent.putExtra("return_key", false);
+		
 		startService(bpsIntent);
 	}
 	

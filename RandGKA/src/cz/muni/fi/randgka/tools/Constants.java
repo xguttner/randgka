@@ -22,6 +22,10 @@ public final class Constants {
 	
 	public static final String PROTOCOL_RANDOMNESS = "cz.muni.fi.androidrandextr.PROTOCOL_RANDOMNESS";
 	
+	public static final String ACTION_GKA_KEY = "cz.muni.fi.androidrandextr.ACTION_GKA_KEY";
+
+	public static final String RETURN_GKA_KEY = "cz.muni.fi.androidrandextr.RETURN_GKA_KEY";
+	
 	/**
 	 * Request codes for intents
 	 */
@@ -40,4 +44,5 @@ public final class Constants {
 	 * sig len
 	 */
 	public static final int SIGNATURE_LENGTH = 512;
+
 }

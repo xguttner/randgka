@@ -74,7 +74,7 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button1"
+        android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView9"
         android:text="@string/gka_key" />
 
@@ -84,7 +84,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/protocol_participants"
+        android:layout_below="@+id/textView13"
         android:onClick="runProtocol"
         android:text="@string/run_protocol" />
 
