@@ -81,7 +81,7 @@ public class MinEntropySourceAppActivity extends Activity {
 		        try {
 		        	if ((dir.exists() || dir.mkdir()) && (outFile.exists() || outFile.createNewFile()) && outFile.canWrite()) {
 		        		mes.getMinEntropyData(outputLength, outFile);
-		        		String message = "Stored "+outputLength+"bits into: "+outFile.getAbsolutePath();
+		        		String message = "Stored "+outputLength+"  bits into: "+outFile.getAbsolutePath();
 		        		textView.setText(message.toCharArray(), 0, message.length());
 		        		/*FileOutputStream fos = new FileOutputStream(outFile);
 				        fos.write(minEntropySequence.getSequence());

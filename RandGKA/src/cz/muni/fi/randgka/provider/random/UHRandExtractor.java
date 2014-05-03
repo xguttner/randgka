@@ -1,5 +1,6 @@
 package cz.muni.fi.randgka.provider.random;
 
+import java.security.SecureRandom;
 import java.security.SecureRandomSpi;
 
 import android.util.Log;
@@ -7,6 +8,7 @@ import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 import cz.muni.fi.randgka.tools.ByteSequence;
+import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.LengthsNotEqualException;
 
 /**
@@ -20,7 +22,7 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	private MinEntropySource mes;
 	
 	private static final int inputLength = 839;
-	private static final int outputLength = 629;
+	private static final int outputLength = Constants.MAX_RE_OUTPUT;
 	private ByteSequence seed;
 	private byte[]seedArray={(byte)0x9a, (byte)0x2a, (byte)0x21, (byte)0x6e, (byte)0x90, (byte)0xa5, (byte)0xae, (byte)0xa4, (byte)0xb6, (byte)0x49, (byte)0xbb, (byte)0xe5, (byte)0xe2, (byte)0x6e, (byte)0x5c, (byte)0x64,
 			 (byte)0xf1, (byte)0x3e, (byte)0xc1, (byte)0x50, (byte)0xd0, (byte)0xc3, (byte)0xc3, (byte)0x1d, (byte)0x27, (byte)0xc7, (byte)0xe1, (byte)0x4e, (byte)0x06, (byte)0xac, (byte)0x35, (byte)0x2b,
@@ -75,8 +77,13 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 		
 		int extractionRounds = (int)Math.ceil((double)length/outputLength);
 		
+		//SecureRandom sr = new SecureRandom();
+		//byte[] sourceSequenceBytes = new byte[105];
 		for (int j = 0; j < extractionRounds; j++) {
 			sourceSequence = mes.getMinEntropyData(inputLength-1, null);
+			
+			//sr.nextBytes(sourceSequenceBytes);
+			//sourceSequence = new ByteSequence(sourceSequenceBytes, inputLength-1);
 			
 			actualSequence = new ByteSequence(new byte[]{(byte)0x80}, 1); //set 1 as the first bit
 			actualSequence.add(sourceSequence);

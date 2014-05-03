@@ -170,7 +170,6 @@ public class BluetoothCommunicationService extends Service {
 	}
 	
 	private void returnKey() {
-		Log.d("ret", "key");
 		Intent returnKeyIntent = new Intent(Constants.RETURN_GKA_KEY);
 		returnKeyIntent.putExtra("key", protocol.getKey().toByteArray());
 	    lbm.sendBroadcast(returnKeyIntent);

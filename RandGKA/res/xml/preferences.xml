@@ -31,6 +31,11 @@
 	            android:entries="@array/randExtractors"
 	            android:entryValues="@array/randExtractors"
 	        />
+        <EditTextPreference android:key="pref_re_outfile" 
+            	android:title="OutputFile" 
+            	android:summary="If not null, randomness extractor sequences will be stored in file with given name" 
+            	android:dialogTitle="OutputFile"
+            />
         <EditTextPreference android:title="OutputLength" 
             	android:key="pref_re_length" 
             	android:defaultValue="128" 

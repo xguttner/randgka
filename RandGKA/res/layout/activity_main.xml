@@ -34,10 +34,10 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/button5"
-        android:onClick="moveToBluetoothGKA"
-        android:text="@string/bluetooth_gka" />
+        android:onClick="moveToGKATechDecision"
+        android:text="@string/gka" />
 
-    <Button
+    <!-- <Button
         android:id="@+id/button4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
         android:onClick="moveToWifiGKA"
         android:text="@string/wifi_gka" />
 
-    <!-- <Button
+     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

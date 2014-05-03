@@ -45,4 +45,8 @@ public final class Constants {
 	 */
 	public static final int SIGNATURE_LENGTH = 512;
 
+	/**
+	 * 
+	 */
+	public static final int MAX_RE_OUTPUT = 629;
 }

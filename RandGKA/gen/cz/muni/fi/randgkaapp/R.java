@@ -20,6 +20,11 @@ public final class R {
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
 
+         Example customization of dimensions originally defined in res/values/dimens.xml
+         (such as screen margins) for screens with more than 820dp of available width. This
+         would include 7" and 10" devices in landscape (~960dp and ~1280dp respectively).
+    
+
          Customize dimensions originally defined in res/values/dimens.xml (such as
          screen margins) for sw720dp devices (e.g. 10" tablets) in landscape here.
     
@@ -79,15 +84,16 @@ public final class R {
         public static final int activity_gkaprotocol_chooser=0x7f030006;
         public static final int activity_gkaprotocol_print_key_app=0x7f030007;
         public static final int activity_gkaprotocol_random_data=0x7f030008;
-        public static final int activity_main=0x7f030009;
-        public static final int activity_min_entropy_source=0x7f03000a;
-        public static final int activity_min_entropy_source_app=0x7f03000b;
-        public static final int activity_public_key_cryptography_app=0x7f03000c;
-        public static final int activity_rand_extractor=0x7f03000d;
-        public static final int activity_rand_extractor_app=0x7f03000e;
-        public static final int activity_random_extractor=0x7f03000f;
-        public static final int child_layout=0x7f030010;
-        public static final int group_layout=0x7f030011;
+        public static final int activity_gkatech_decision=0x7f030009;
+        public static final int activity_main=0x7f03000a;
+        public static final int activity_min_entropy_source=0x7f03000b;
+        public static final int activity_min_entropy_source_app=0x7f03000c;
+        public static final int activity_public_key_cryptography_app=0x7f03000d;
+        public static final int activity_rand_extractor=0x7f03000e;
+        public static final int activity_rand_extractor_app=0x7f03000f;
+        public static final int activity_random_extractor=0x7f030010;
+        public static final int child_layout=0x7f030011;
+        public static final int group_layout=0x7f030012;
     }
     public static final class menu {
         public static final int authentication=0x7f0a0000;
@@ -103,12 +109,13 @@ public final class R {
         public static final int gkaprotocol_chooser=0x7f0a000a;
         public static final int gkaprotocol_print_key_app=0x7f0a000b;
         public static final int gkaprotocol_random_data=0x7f0a000c;
-        public static final int main=0x7f0a000d;
-        public static final int min_entropy_source=0x7f0a000e;
-        public static final int public_key_cryptography_app=0x7f0a000f;
-        public static final int rand_extractor=0x7f0a0010;
-        public static final int rand_source=0x7f0a0011;
-        public static final int settings=0x7f0a0012;
+        public static final int gkatech_decision=0x7f0a000d;
+        public static final int main=0x7f0a000e;
+        public static final int min_entropy_source=0x7f0a000f;
+        public static final int public_key_cryptography_app=0x7f0a0010;
+        public static final int rand_extractor=0x7f0a0011;
+        public static final int rand_source=0x7f0a0012;
+        public static final int settings=0x7f0a0013;
     }
     public static final class raw {
         public static final int seed=0x7f050000;
@@ -172,6 +179,7 @@ public final class R {
         public static final int title_activity_gkaprotocol_chooser=0x7f08002f;
         public static final int title_activity_gkaprotocol_print_key_app=0x7f080026;
         public static final int title_activity_gkaprotocol_random_data=0x7f080021;
+        public static final int title_activity_gkatech_decision=0x7f080040;
         public static final int title_activity_min_entropy_source=0x7f08001c;
         public static final int title_activity_public_key_cryptography_app=0x7f080022;
         public static final int title_activity_rand_extractor=0x7f08001e;

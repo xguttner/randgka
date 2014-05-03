@@ -61,8 +61,10 @@
     <string name="publicKeyLength">Public key length (bits)</string>
     <string name="devices">Devices</string>
     <string name="title_activity_bluetooth_gk">BluetoothGKActivity</string>
-	<string name="protocol_version">Version</string>
-	<string name="auth">auth</string>
-	<string name="non_auth">non-auth</string>
-	<string name="wifi_gka">Wi-fi GKA</string>
+    <string name="protocol_version">Version</string>
+    <string name="auth">auth</string>
+    <string name="non_auth">non-auth</string>
+    <string name="wifi_gka">Wi-fi GKA</string>
+    <string name="title_activity_gkatech_decision">GKATechDecisionActivity</string>
+
 </resources>

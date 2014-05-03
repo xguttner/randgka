@@ -25,12 +25,9 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-			 	<action android:name="cz.muni.fi.randgka.ACTION_GKA_KEY"/>
-			 	<category android:name="android.intent.category.DEFAULT"/>
-			</intent-filter>
         </activity>
         <activity
             android:name="cz.muni.fi.randgka.randgkaapp.MinEntropySourceAppActivity"
@@ -78,6 +75,15 @@
         <activity
             android:name="cz.muni.fi.randgka.randgkaapp.BluetoothGKALeaderActivity"
             android:label="@string/title_activity_bluetooth_gkaleader" >
+        </activity>
+        <activity
+            android:name="cz.muni.fi.randgka.randgkaapp.GKATechDecisionActivity"
+            android:label="@string/title_activity_gkatech_decision" >
+            
+            <intent-filter>
+                <action android:name="cz.muni.fi.randgka.ACTION_GKA_KEY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
     </application>
 

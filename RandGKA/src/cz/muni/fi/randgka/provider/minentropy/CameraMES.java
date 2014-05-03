@@ -7,12 +7,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-
 import cz.muni.fi.randgka.tools.ByteSequence;
+import android.annotation.TargetApi;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
+import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -23,6 +24,7 @@ import android.view.SurfaceView;
  * Class utilizing the camera as a min-entropy source. It needs CameraMESSupport class to gain
  * a SurfaceView and Camera objects.
  */
+@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 public class CameraMES implements MinEntropySource, Callback, PreviewCallback, Serializable {
 
 	private static final long serialVersionUID = 3507582501311379646L;
@@ -34,19 +36,19 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	private Looper cameraLooper;
 	private SurfaceView surfaceView;
 	private byte[] imageBuffer;
-	private static final int PREVIEW_HEIGHT = 240, 
-			PREVIEW_WIDTH = 320, 
-			YBLOCK_SIZE = PREVIEW_HEIGHT*PREVIEW_WIDTH,
+	private static final int //PREVIEW_HEIGHT = 240, 
+			//PREVIEW_WIDTH = 320, 
+			//YBLOCK_SIZE = PREVIEW_HEIGHT*PREVIEW_WIDTH,
 			MAXIMUM_FPS = 16000;
 	
 	// processing-related parameters
 	private static final int SQUARE_MATRIX_WIDTH = 20, // number of squares in the row the preview frame is divided into
 			SQUARE_SIDE = 16, 
-			SQUARE_OFFSET = YBLOCK_SIZE / (SQUARE_SIDE*SQUARE_SIDE),
+			//SQUARE_OFFSET = YBLOCK_SIZE / (SQUARE_SIDE*SQUARE_SIDE),
 			FRAME_SKIPPER = 1, // we take every FRAME_SKIPPER-th frame
 			PREPROCESSED_SAMPLE_LENGTH = 4;
 	private ByteSequence sourceData,
-			lastPreprocessedPiece;
+			byteHolder;
 	private CountDownLatch countDownLatch;
 	private boolean preprocessingFlag;
 	private int bytesPerSample,
@@ -58,6 +60,17 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	// storing-related parameters
 	private FileOutputStream fos;
 	private boolean store;
+	
+	//new preprocessing
+	private static final int P_WIDTH = 320,
+			P_HEIGHT = 240,
+			YB_SIZE = P_WIDTH*P_HEIGHT,
+			SQ_SIDE = 10,
+			SQ_IN_ROW = P_WIDTH/SQ_SIDE,
+			SQ_IN_COLUMN = P_HEIGHT/SQ_SIDE,
+			NO_OF_ROW_MERGE = 8,
+			PREPROCESSED_LENGTH = SQ_IN_ROW/NO_OF_ROW_MERGE,
+			PER_BYTE_ROUNDS = (int)Math.ceil(8/PREPROCESSED_LENGTH);
 	
 	/**
 	 * Non-parametric constructor
@@ -85,7 +98,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
         //set preview parameters
 		cameraSettings = camera.getParameters();
 		cameraSettings.setPreviewFormat(ImageFormat.NV21);
-		cameraSettings.setPreviewSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+		cameraSettings.setPreviewSize(P_WIDTH, P_HEIGHT);
 		
 		try {
 			List<int[]> rates = cameraSettings.getSupportedPreviewFpsRange();
@@ -115,7 +128,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		camera.setDisplayOrientation(0);
 		
 		// set callback buffer for image preview
-		bytesPerSample = ImageFormat.getBitsPerPixel(cameraSettings.getPreviewFormat()) * PREVIEW_WIDTH * PREVIEW_HEIGHT / 8;
+		bytesPerSample = ImageFormat.getBitsPerPixel(cameraSettings.getPreviewFormat()) * P_WIDTH * P_HEIGHT / 8;
 		imageBuffer = new byte[this.bytesPerSample];
 		camera.addCallbackBuffer(imageBuffer);
 
@@ -142,6 +155,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		this.currentSample = 0;
 		this.frameNo = 0;
 		this.sampleNumber = sampleNumber;
+		this.byteHolder = new ByteSequence();
 	}
 	
 	/**
@@ -163,14 +177,14 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 				// decision about preprocessing
 				if (preprocessingFlag) data = preprocess(new ByteSequence(newData, bytesPerSample*8));
 				else data = new ByteSequence(newData, bytesPerSample*8);
-				
+				//Log.d("oneseq", data.toString());
 				// decision about storing the data
 				if (store) {
-					//TODO: set according to PREPROCESSED_SAMPLE_LENGTH
-					if (currentSample%2 == 1) {
-						data.add(lastPreprocessedPiece);
-						fos.write(data.getSequence());
-					} else lastPreprocessedPiece = data;
+					byteHolder.add(data);
+					if ((currentSample+1)%PER_BYTE_ROUNDS == 0){
+						fos.write(byteHolder.getSequence());
+						byteHolder = new ByteSequence();
+					}
 				}
 				else sourceData.add(data);
 				
@@ -195,6 +209,44 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	 * @return ByteSequence of the preprocessed data
 	 */
 	private ByteSequence preprocess(ByteSequence randSequence) {
+		
+		byte[] inputData = randSequence.getSequence();
+		byte[] preprocessedData = new byte[PREPROCESSED_LENGTH];
+		byte[] columnPixels = new byte[SQ_IN_ROW];
+		ByteSequence returnSequence = new ByteSequence();
+		
+		// process frame into columnPixels
+		for (int j = 0, i = 0; i < SQ_IN_ROW*SQ_IN_COLUMN; i++) {
+			j = (i/SQ_IN_ROW)*(P_WIDTH*SQ_SIDE) + // move to current square row
+					(i%SQ_IN_ROW)*SQ_SIDE + // move to current square
+					((i+((3*currentSample)/SQ_SIDE))%SQ_IN_ROW%SQ_SIDE)*P_WIDTH + // move to current row in square
+					((i/SQ_IN_ROW)+(3*currentSample))%SQ_SIDE; // move from left border of square
+			columnPixels[i%SQ_IN_ROW] = (byte)(0xff & ((int)columnPixels[i%SQ_IN_ROW] ^ ((int)inputData[j] ^ (int)inputData[YB_SIZE+2*(int)(j/4)] ^ (int)inputData[YB_SIZE+2*(int)(j/4)+1])));
+		}
+		
+		// process columnPixels into PREPROCESSED_SAMPLE_LENGTH bits
+		for (int i = 0; i < PREPROCESSED_LENGTH; i++) {
+			for (int k = 0; k < NO_OF_ROW_MERGE; k++) { // xoring different columns into one of the PREPROCESSED_SAMPLE_LENGTH important
+				preprocessedData[i] = (byte)(0xff & ((int)preprocessedData[i] ^ (int)columnPixels[i + k*PREPROCESSED_LENGTH]));
+			}
+			for (int l = 1; l < 8; l++) { // xoring the bits of one byte to get the outcoming bit (stored as LSB of a byte)
+				byte before = preprocessedData[i];
+				preprocessedData[i] = (byte)(0xff & ((int)(0x01 & before) ^ (int)(0x7f & (preprocessedData[i] >> 1))));
+			}
+			returnSequence.addBit(preprocessedData[i]);
+		}
+		
+		return returnSequence;
+	}
+	
+	/**
+	 * Preprocessing mechanism. Mechanism is set for the NV21 format that should be available in all
+	 * Android devices. 
+	 * 
+	 * @param randSequence to preprocess
+	 * @return ByteSequence of the preprocessed data
+	 */
+	/*private ByteSequence preprocess2(ByteSequence randSequence) {
 		// shift the pixels used as a source between frames
 		currentShift = (currentShift + 5) % SQUARE_SIDE;
 		
@@ -226,7 +278,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		}
 		
 		return returnSequence;
-	}
+	}*/
 	
 	@Override
 	public ByteSequence getMinEntropyData(int minEntropyDataLength, File storage) {
@@ -243,7 +295,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 
 	@Override
 	public int getBitsPerSample(boolean usingPreprocessing) {
-		if (usingPreprocessing) return PREPROCESSED_SAMPLE_LENGTH;
+		if (usingPreprocessing) return PREPROCESSED_LENGTH;
 		else return bytesPerSample*8;
 	}
 	
@@ -336,6 +388,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		}
 	}
 
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		holder.getSurface().release();
 		stop();
