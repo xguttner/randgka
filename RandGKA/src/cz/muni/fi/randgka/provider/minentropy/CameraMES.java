@@ -68,9 +68,9 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 			SQ_SIDE = 10,
 			SQ_IN_ROW = P_WIDTH/SQ_SIDE,
 			SQ_IN_COLUMN = P_HEIGHT/SQ_SIDE,
-			NO_OF_ROW_MERGE = 8,
+			NO_OF_ROW_MERGE = 1,
 			PREPROCESSED_LENGTH = SQ_IN_ROW/NO_OF_ROW_MERGE,
-			PER_BYTE_ROUNDS = (int)Math.ceil(8/PREPROCESSED_LENGTH);
+			PER_BYTE_ROUNDS = (int)Math.ceil(8.0/PREPROCESSED_LENGTH);
 	
 	/**
 	 * Non-parametric constructor
@@ -182,6 +182,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 				if (store) {
 					byteHolder.add(data);
 					if ((currentSample+1)%PER_BYTE_ROUNDS == 0){
+						//Log.d("bh", byteHolder.toString());
 						fos.write(byteHolder.getSequence());
 						byteHolder = new ByteSequence();
 					}

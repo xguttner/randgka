@@ -191,7 +191,6 @@ public class BluetoothCommunicationService extends Service {
 	private class PMessageHandler extends Handler {
 		@Override
 		public void handleMessage(Message message) {
-			Log.d("here","d");
 			Bundle bundle = message.getData();
 			if (bundle != null) {
 				PMessage pMessage = (PMessage)bundle.getSerializable("pMessage");

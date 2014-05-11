@@ -83,9 +83,6 @@ public class MinEntropySourceAppActivity extends Activity {
 		        		mes.getMinEntropyData(outputLength, outFile);
 		        		String message = "Stored "+outputLength+"  bits into: "+outFile.getAbsolutePath();
 		        		textView.setText(message.toCharArray(), 0, message.length());
-		        		/*FileOutputStream fos = new FileOutputStream(outFile);
-				        fos.write(minEntropySequence.getSequence());
-				        fos.close();*/
 		        	} else Log.e("min-entropy", "Storing into external storage failed.");
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
