@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:text="@string/protocol" />
+        android:text="@string/augot" />
 
     <TextView
         android:id="@+id/protocol_participants"
@@ -44,20 +44,30 @@
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
-        android:id="@+id/textView5"
+        android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView4"
         android:text="@string/nonceLength"
         android:textAppearance="?android:attr/textAppearanceSmall" />
-
+    
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/textView3"
+        android:layout_alignBottom="@+id/textView3"
+        android:layout_toRightOf="@+id/textView3"
+        android:text=""
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+    
     <TextView
         android:id="@+id/textView7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView5"
+        android:layout_below="@+id/textView3"
         android:text="@string/groupKeyLength"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -95,16 +105,6 @@
         android:layout_alignTop="@+id/textView14"
         android:layout_marginLeft="16dp"
         android:layout_toRightOf="@+id/protocol_participants"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <TextView
-        android:id="@+id/textView6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/textView5"
-        android:layout_toRightOf="@+id/textView5"
-        android:paddingLeft="10dp"
-        android:text=""
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
@@ -164,16 +164,6 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView1"
         android:text="@string/protocol_version" />
-
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/textView1"
-        android:layout_alignBottom="@+id/textView1"
-        android:layout_toRightOf="@+id/textView1"
-        android:paddingLeft="10dp"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
         android:id="@+id/textView15"

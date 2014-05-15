@@ -44,9 +44,7 @@ public final class Constants {
 	 * sig len
 	 */
 	public static final int SIGNATURE_LENGTH = 512;
-
-	/**
-	 * 
-	 */
-	public static final int MAX_RE_OUTPUT = 629;
+	
+	public static final String BLUETOOTH_GKA = "Bluetooth";
+	public static final String WIFI_GKA = "Wi-Fi Direct";
 }

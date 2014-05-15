@@ -62,9 +62,14 @@
     <string name="devices">Devices</string>
     <string name="title_activity_bluetooth_gk">BluetoothGKActivity</string>
     <string name="protocol_version">Version</string>
-    <string name="auth">auth</string>
-    <string name="non_auth">non-auth</string>
+    <string name="auth">Authenticated</string>
+    <string name="auth_conf">Authenticated + key confirmation</string>
+    <string name="non_auth">Non-authenticated</string>
     <string name="wifi_gka">Wi-fi GKA</string>
     <string name="title_activity_gkatech_decision">GKATechDecisionActivity</string>
-
+	<string name="role">Role</string>
+	<string name="channel">Channel</string>
+	<string name="fresh_key">Use fresh long-term key</string>
+	<string name="continu">Continue</string>
+	<string name="augot">Augot protocol</string>
 </resources>

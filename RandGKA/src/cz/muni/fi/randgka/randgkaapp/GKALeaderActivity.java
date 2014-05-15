@@ -18,31 +18,23 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 
-public class BluetoothGKALeaderActivity extends Activity {
+public class GKALeaderActivity extends Activity {
 
 	private BluetoothAdapter bluetoothAdapter;
-	private static final int REQUEST_ENABLE_BT= 1785, REQUEST_DISCOVERABLE_BT = 1786;
+	private static final int REQUEST_ENABLE_BT = 1785, REQUEST_DISCOVERABLE_BT = 1786;
+	private String technology;
+	private boolean freshKey = false;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_bluetooth_gkaleader);
 		
-		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		
-		enableBluetooth();
-		
-		ArrayAdapter<String> protocols = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
-		protocols.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		protocols.add("Augot");
-		Spinner protocolsSpinner = (Spinner)findViewById(R.id.spinner1);
-		protocolsSpinner.setAdapter(protocols);
-		
 		ArrayAdapter<Integer> nonceLengths = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item);
 		nonceLengths.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		nonceLengths.add(256);
-		nonceLengths.add(512);
-		nonceLengths.add(1024);
+		nonceLengths.add(32);
+		nonceLengths.add(64);
+		nonceLengths.add(128);
 		Spinner nonceLengthsSpinner = (Spinner)findViewById(R.id.spinner2);
 		nonceLengthsSpinner.setAdapter(nonceLengths);
 		
@@ -50,7 +42,6 @@ public class BluetoothGKALeaderActivity extends Activity {
 		groupKeyLengths.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		groupKeyLengths.add(1024);
 		groupKeyLengths.add(2048);
-		groupKeyLengths.add(4096);
 		Spinner groupKeyLengthsSpinner = (Spinner)findViewById(R.id.spinner3);
 		groupKeyLengthsSpinner.setAdapter(groupKeyLengths);
 		
@@ -62,6 +53,14 @@ public class BluetoothGKALeaderActivity extends Activity {
 		Spinner publicKeyLengthsSpinner = (Spinner)findViewById(R.id.spinner4);
 		publicKeyLengthsSpinner.setAdapter(publicKeyLengths);
 		
+		freshKey = getIntent().getBooleanExtra("freshKey", false);
+		technology = getIntent().getStringExtra("technology");
+		if (technology.equals(Constants.WIFI_GKA)) {
+			
+		} else if (technology.equals(Constants.BLUETOOTH_GKA)) {
+			bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+			enableBluetooth();
+		}
 	}
 
 	@Override
@@ -88,7 +87,7 @@ public class BluetoothGKALeaderActivity extends Activity {
 				startActivity(moving);
 			}
 			else {
-				Intent moving = new Intent(this, BluetoothGKAActivity.class);
+				Intent moving = new Intent(this, GKAActivity.class);
 				moving.putExtra("isLeader", true);
 				moving.setFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT);
 				startActivity(moving);
@@ -111,37 +110,37 @@ public class BluetoothGKALeaderActivity extends Activity {
 	}
 	
 	public void leaderRun(View view) {
-		// make device discoverable
-		startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_DISCOVERABLE_BT);
-		Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
-		
-		Spinner spinner1 = (Spinner)findViewById(R.id.spinner1);
-		String protocol = (String)spinner1.getSelectedItem();
-		bpsIntent.putExtra("protocol", protocol);
-		
 		Spinner spinner2 = (Spinner)findViewById(R.id.spinner2);
 		Integer nonceLength = (Integer)spinner2.getSelectedItem();
-		bpsIntent.putExtra("nonceLength", nonceLength);
-		
 		Spinner spinner3 = (Spinner)findViewById(R.id.spinner3);
 		Integer groupKeyLength = (Integer)spinner3.getSelectedItem();
-		bpsIntent.putExtra("groupKeyLength", groupKeyLength);
-		
 		Spinner spinner4 = (Spinner)findViewById(R.id.spinner4);
 		Integer publicKeyLength = (Integer)spinner4.getSelectedItem();
-		bpsIntent.putExtra("publicKeyLength", publicKeyLength);
-		
-		RadioButton rb = (RadioButton)findViewById(R.id.radio0);
-		bpsIntent.putExtra("isAuth", rb.isChecked());
-		
-		bpsIntent.setAction(Constants.SERVER_START);
-		
-		if (getIntent().getBooleanExtra("return_key", false)) {
-			bpsIntent.putExtra("return_key", true);
+		RadioButton authRadio = (RadioButton)findViewById(R.id.radio1);
+		RadioButton authConfRadio = (RadioButton)findViewById(R.id.radio2);
+		if (technology.equals(Constants.BLUETOOTH_GKA)) {
+			// make device discoverable
+			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_DISCOVERABLE_BT);
+			Intent bpsIntent = new Intent(this, BluetoothCommunicationService.class);
+			
+			bpsIntent.putExtra("nonceLength", nonceLength);
+			bpsIntent.putExtra("groupKeyLength", groupKeyLength);
+			bpsIntent.putExtra("publicKeyLength", publicKeyLength);
+			bpsIntent.putExtra("isAuth", authRadio.isChecked());
+			bpsIntent.putExtra("isAuthConf", authConfRadio.isChecked());
+			bpsIntent.putExtra("freshKey", freshKey);
+			
+			bpsIntent.setAction(Constants.SERVER_START);
+			
+			if (getIntent().getBooleanExtra("return_key", false)) {
+				bpsIntent.putExtra("return_key", true);
+			}
+			else bpsIntent.putExtra("return_key", false);
+			
+			startService(bpsIntent);
+		} else if (technology.equals(Constants.WIFI_GKA)) {
+			
 		}
-		else bpsIntent.putExtra("return_key", false);
-		
-		startService(bpsIntent);
 	}
 	
 }

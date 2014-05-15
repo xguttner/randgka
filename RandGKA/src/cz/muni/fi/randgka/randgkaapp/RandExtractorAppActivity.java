@@ -13,6 +13,7 @@ import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySourceType;
+import cz.muni.fi.randgka.provider.random.UHRandExtractorParams;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
@@ -88,7 +89,8 @@ public class RandExtractorAppActivity extends Activity {
 			        try {
 			        	if ((dir.exists() || dir.mkdir()) && (outFile.exists() || outFile.createNewFile()) && outFile.canWrite()) {
 			        		FileOutputStream fos = new FileOutputStream(outFile);
-			        		int maxBytesInOneRound = Constants.MAX_RE_OUTPUT/8;
+			        		Integer maxBytesInOneRound = UHRandExtractorParams.getLengths(outputLength).getKey();
+			        		if (maxBytesInOneRound == null) maxBytesInOneRound = UHRandExtractorParams.MAXIMAL_OUTPUT;
 			        		if (outputLength > maxBytesInOneRound) {
 			        			int rounds = (int)Math.ceil((double)outputLength/maxBytesInOneRound);
 			        			byte[] bytes = new byte[maxBytesInOneRound];

@@ -20,7 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class BluetoothGKAActivity extends Activity {
+public class GKAActivity extends Activity {
 
 	private ProtocolBroadcastReceiver receiver;
 	private boolean isLeader = false;
@@ -30,20 +30,19 @@ public class BluetoothGKAActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gkaprotocol);
 		
-		TextView protocolTV = (TextView)findViewById(R.id.textView3);
 		TextView versionTV = (TextView)findViewById(R.id.textView15);
-		TextView nonceLengthTV = (TextView)findViewById(R.id.textView6);
-		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
+		TextView nonceLengthTV = (TextView)findViewById(R.id.textView8);
+		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView5);
 		TextView publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
 		TextView protocolParticipantsTV = (TextView)findViewById(R.id.textView13);
-		TextView gkaTV = (TextView)findViewById(R.id.textView12);
+		TextView gkaTV = (TextView)findViewById(R.id.textView11);
 		
 		IntentFilter protocolFilter = new IntentFilter();
 		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
 		protocolFilter.addAction(Constants.GET_GKA_KEY);
 		protocolFilter.addAction(Constants.GET_PARAMS);
 		receiver = new ProtocolBroadcastReceiver();
-		receiver.setTextViews(protocolParticipantsTV, gkaTV, protocolTV, versionTV, nonceLengthTV, groupKeyLengthTV, publicKeyLengthTV);
+		receiver.setTextViews(protocolParticipantsTV, gkaTV, versionTV, nonceLengthTV, groupKeyLengthTV, publicKeyLengthTV);
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
 		lbm.registerReceiver(receiver, protocolFilter);
 		
@@ -56,7 +55,7 @@ public class BluetoothGKAActivity extends Activity {
 				Log.d("try", "to return");
 				Intent result = new Intent();       
 				result.putExtra("key", intent.getByteArrayExtra("key"));
-				BluetoothGKAActivity.this.setResult(Activity.RESULT_OK, result);
+				GKAActivity.this.setResult(Activity.RESULT_OK, result);
 				finish();
 			}
 		};

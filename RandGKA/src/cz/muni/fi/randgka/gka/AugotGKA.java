@@ -1,9 +1,20 @@
 package cz.muni.fi.randgka.gka;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import android.util.Log;
 import cz.muni.fi.randgka.tools.MessageAction;
@@ -14,55 +25,89 @@ public class AugotGKA implements GKAProtocol {
 
 	private static final ProtocolType PROTOCOL_TYPE = ProtocolType.AUGOT;
 	
-	private static final BigInteger p = new BigInteger("ab359aa76a6773ed7a93b214db0c25d0160817b8a893c001c761e198a3694509ebe8"+
-			"7a5313e0349d95083e5412c9fc815bfd61f95ddece43376550fdc624e92ff38a415783b9726120"+
-			"4e05d65731bba1ccff0e84c8cd2097b75feca1029261ae19a389a2e15d2939314b184aef707b82"+
-			"eb94412065181d23e04bf065f4ac413f", 16),
-			g = new BigInteger("2", 16),
-			q = p.subtract(BigInteger.ONE).divide(BigInteger.ONE.add(BigInteger.ONE));
+	private static final String modpgroupFile = "modpgroups.xml";
+	
+	private BigInteger p, g, q;
 	
 	private GKAParticipants participants;
 	private SecureRandom secureRandom;
 	private GKAProtocolParams gkaProtocolParams;
 	private BigInteger secret,
-			publicKey,
+			blindedSecret,
 			secretInverse,
 			key;
 	private byte[] secondRoundBroadcast;
-	private int secondRoundBroadcastLength,
+	private int secretLength,
+			secondRoundBroadcastLength,
 			secondRoundBroadcastPartLength,
 			partsReceived;
 	private byte[] nonce;
 	private boolean initialized = false;
 	
-	public AugotGKA() {}
+	public AugotGKA() {
+	}
 	
 	@Override
 	public void init(GKAParticipants participants, SecureRandom secureRandom, GKAProtocolParams gkaProtocolParams) {
-		this.participants = participants;
-		this.secureRandom = secureRandom;
-		
-		// so far the only implemented key length
-		gkaProtocolParams.setKeyLength(128);
-		
-		this.gkaProtocolParams = gkaProtocolParams;
-		if (participants != null) {
-			partsReceived = 0;
-			secondRoundBroadcastPartLength = (4 + gkaProtocolParams.getNonceLength() + gkaProtocolParams.getKeyLength()*2);
-			this.secondRoundBroadcastLength = (participants.size()-1) * secondRoundBroadcastPartLength;
-			this.secondRoundBroadcast = new byte[secondRoundBroadcastLength];
+		try {
+			getModpGroup();
+			
+			this.participants = participants;
+			this.secureRandom = secureRandom;
+			this.gkaProtocolParams = gkaProtocolParams;
+			if (participants != null) {
+				partsReceived = 0;
+				secondRoundBroadcastPartLength = (4 + gkaProtocolParams.getNonceLength() + gkaProtocolParams.getGroupKeyLength()*2);
+				this.secondRoundBroadcastLength = (participants.size()-1) * secondRoundBroadcastPartLength;
+				this.secondRoundBroadcast = new byte[secondRoundBroadcastLength];
+			}
+			
+			byte[] secretBytes = new byte[secretLength];
+			secureRandom.nextBytes(secretBytes);
+			secret = new BigInteger(1, secretBytes);
+			secret = secret.mod(q);
+			blindedSecret = g.modPow(secret, p);
+			secretInverse = secret.modInverse(q); 
+			key = BigInteger.ONE;
+			initialized = true;
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		
-		byte[] secretBytes = new byte[gkaProtocolParams.getKeyLength()/2];
-		secureRandom.nextBytes(secretBytes);
-		secret = new BigInteger(1, secretBytes);
-		secret = secret.mod(q);
-		publicKey = g.modPow(secret, p);
-		secretInverse = secret.modInverse(q); 
-		key = BigInteger.ONE;
-		initialized = true;
 	}
 
+	private void getModpGroup() throws ParserConfigurationException, SAXException, IOException {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setValidating(false);
+        DocumentBuilder builder;
+		builder = dbf.newDocumentBuilder();
+        Document doc = builder.parse(modpgroupFile);
+        NodeList groupNodes = doc.getElementsByTagName("group");
+        NodeList paramNodes;
+        Node groupNode, pNode, gNode, secretLengthNode;
+        Integer size;
+        NamedNodeMap attributes;
+        for (int i = 0; i < groupNodes.getLength(); i++) {
+        	groupNode = groupNodes.item(i);
+        	attributes = groupNode.getAttributes();
+        	size = Integer.parseInt(attributes.getNamedItem("size").getTextContent());
+        	if (size == gkaProtocolParams.getGroupKeyLength()) {
+        		paramNodes = groupNode.getChildNodes();
+        		pNode = paramNodes.item(1);
+        		gNode = paramNodes.item(2);
+        		secretLengthNode = paramNodes.item(0);
+        		p = new BigInteger(pNode.getTextContent(), 16);
+        		g = new BigInteger(gNode.getTextContent(), 16);
+        		secretLength = Integer.parseInt(secretLengthNode.getTextContent());
+        		q = p.subtract(BigInteger.ONE).divide(BigInteger.ONE.add(BigInteger.ONE));
+        		break;
+        	}
+        }
+	}
+	
 	@Override
 	public GKAProtocolRound nextRound(PMessage message) {
 		
@@ -140,20 +185,20 @@ public class AugotGKA implements GKAProtocol {
 		secureRandom.nextBytes(nonce);
 		
 		// length: int in 4 bytes of leader's id + leader's nonce + member's nonce + public key length
-		byte[] messageArray = new byte[4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getKeyLength()];
+		byte[] messageArray = new byte[4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getGroupKeyLength()];
 		
 		byte[] leaderId = ByteBuffer.allocate(4).putInt(message.getOriginatorId()).array();
 		 
 		System.arraycopy(leaderId, 0, messageArray, 0, 4);
 		System.arraycopy(leaderNonce, 0, messageArray, 4, gkaProtocolParams.getNonceLength());
 		System.arraycopy(nonce, 0, messageArray, gkaProtocolParams.getNonceLength()+4, gkaProtocolParams.getNonceLength());
-		System.arraycopy(publicKey.toByteArray(), (publicKey.toByteArray().length>gkaProtocolParams.getKeyLength())?1:0, messageArray, 2*gkaProtocolParams.getNonceLength()+4, gkaProtocolParams.getKeyLength());
+		System.arraycopy(blindedSecret.toByteArray(), (blindedSecret.toByteArray().length>gkaProtocolParams.getGroupKeyLength())?1:0, messageArray, 2*gkaProtocolParams.getNonceLength()+4, gkaProtocolParams.getGroupKeyLength());
 		
-		Log.d("arrayM", Arrays.toString(messageArray)+" "+messageArray.length+" "+(4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getKeyLength()));
+		Log.d("arrayM", Arrays.toString(messageArray)+" "+messageArray.length+" "+(4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getGroupKeyLength()));
 		 
-		Log.d("array", Arrays.toString(publicKey.toByteArray())+" "+publicKey.toByteArray().length);
-		Log.d("receivedPublic", publicKey.toString(16));  
-		pMessage.setLength(4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getKeyLength());
+		Log.d("array", Arrays.toString(blindedSecret.toByteArray())+" "+blindedSecret.toByteArray().length);
+		Log.d("receivedPublic", blindedSecret.toString(16));  
+		pMessage.setLength(4 + 2*gkaProtocolParams.getNonceLength() + gkaProtocolParams.getGroupKeyLength());
 		pMessage.setMessage(messageArray);
 		
 		if (gkaProtocolParams.isAuthenticated()) pMessage.selfSign(gkaProtocolParams.getPrivateKey(), null);
@@ -170,9 +215,9 @@ public class AugotGKA implements GKAProtocol {
 		
 		GKAParticipant originator = participants.getParticipant(message.getOriginatorId());
 		if (originator != null && originator.getDHPublicKey() == null) {
-				byte[] keyBytes = new byte[gkaProtocolParams.getKeyLength()];
+				byte[] keyBytes = new byte[gkaProtocolParams.getGroupKeyLength()];
 				Log.d("arrayM", Arrays.toString(message.getMessage()));
-				System.arraycopy(message.getMessage(), 2*gkaProtocolParams.getNonceLength()+4, keyBytes, 0, gkaProtocolParams.getKeyLength());
+				System.arraycopy(message.getMessage(), 2*gkaProtocolParams.getNonceLength()+4, keyBytes, 0, gkaProtocolParams.getGroupKeyLength());
 				Log.d("array", Arrays.toString(keyBytes));
 				BigInteger receivedPublic = new BigInteger(1, keyBytes);
 				BigInteger compoundPublic = receivedPublic.modPow(secret, p);
@@ -191,8 +236,8 @@ public class AugotGKA implements GKAProtocol {
 				byte[] originatorIdArray = ByteBuffer.allocate(4).putInt(message.getOriginatorId()).array();
 				System.arraycopy(originatorIdArray, 0, secondRoundBroadcast, offset, 4);
 				System.arraycopy(message.getMessage(), gkaProtocolParams.getNonceLength()+4, secondRoundBroadcast, offset+4, gkaProtocolParams.getNonceLength());
-				System.arraycopy(keyBytes, 0, secondRoundBroadcast, offset+4+gkaProtocolParams.getNonceLength(), gkaProtocolParams.getKeyLength());
-				System.arraycopy(compoundPublic.toByteArray(), (compoundPublic.toByteArray().length>gkaProtocolParams.getKeyLength())?1:0, secondRoundBroadcast, offset+4+gkaProtocolParams.getNonceLength()+gkaProtocolParams.getKeyLength(), gkaProtocolParams.getKeyLength());
+				System.arraycopy(keyBytes, 0, secondRoundBroadcast, offset+4+gkaProtocolParams.getNonceLength(), gkaProtocolParams.getGroupKeyLength());
+				System.arraycopy(compoundPublic.toByteArray(), (compoundPublic.toByteArray().length>gkaProtocolParams.getGroupKeyLength())?1:0, secondRoundBroadcast, offset+4+gkaProtocolParams.getNonceLength()+gkaProtocolParams.getGroupKeyLength(), gkaProtocolParams.getGroupKeyLength());
 				
 				if (partsReceived == participants.size()-1) {
 					pMessage.setRoundNo((byte)3);
@@ -227,15 +272,15 @@ public class AugotGKA implements GKAProtocol {
 		while (offset < message.getLength()) {
 			
 			byte[] currentIdArray = new byte[4];
-			byte[] currentKeyArray = new byte[gkaProtocolParams.getKeyLength()];
-			byte[] currentCompoundKeyArray = new byte[gkaProtocolParams.getKeyLength()];
+			byte[] currentKeyArray = new byte[gkaProtocolParams.getGroupKeyLength()];
+			byte[] currentCompoundKeyArray = new byte[gkaProtocolParams.getGroupKeyLength()];
 			
 			System.arraycopy(message.getMessage(), offset, currentIdArray, 0, 4);
 			currentId = ByteBuffer.wrap(currentIdArray).getInt();
 			originator = participants.getParticipant(currentId);
 			
-				System.arraycopy(message.getMessage(), offset+4+gkaProtocolParams.getNonceLength(), currentKeyArray, 0, gkaProtocolParams.getKeyLength());
-				System.arraycopy(message.getMessage(), offset+4+gkaProtocolParams.getNonceLength()+gkaProtocolParams.getKeyLength(), currentCompoundKeyArray, 0, gkaProtocolParams.getKeyLength());
+				System.arraycopy(message.getMessage(), offset+4+gkaProtocolParams.getNonceLength(), currentKeyArray, 0, gkaProtocolParams.getGroupKeyLength());
+				System.arraycopy(message.getMessage(), offset+4+gkaProtocolParams.getNonceLength()+gkaProtocolParams.getGroupKeyLength(), currentCompoundKeyArray, 0, gkaProtocolParams.getGroupKeyLength());
 				
 				originator.setDHPublicKey(new BigInteger(1, currentKeyArray));
 				participants.merge(originator);
@@ -263,8 +308,8 @@ public class AugotGKA implements GKAProtocol {
 	@Override
 	public BigInteger getKey() {
 		if (participants.getMe().getRole().equals(GKAParticipantRole.LEADER)) {
-			Log.d("publicKey", publicKey.toString(16));
-			key = key.multiply(publicKey).mod(p);
+			Log.d("publicKey", blindedSecret.toString(16));
+			key = key.multiply(blindedSecret).mod(p);
 			Log.d("key2", key.toString(16));
 		}
 		return key;

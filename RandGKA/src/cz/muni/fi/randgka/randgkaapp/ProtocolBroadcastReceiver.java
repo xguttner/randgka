@@ -18,9 +18,8 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 
 	private TextView participantsTextView,
 				keyTextView,
-				protocolTV,  
 				versionTV, 
-				nonceLengthTV, 
+				nonceLengthTV,
 				groupKeyLengthTV,
 				publicKeyLengthTV;
 	
@@ -48,13 +47,13 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 							try {
 								MessageDigest md = MessageDigest.getInstance("SHA-256");
 								md.update(bf.getMacAddress().getBytes());
-								participantsTextView.append("\nHash: " + bytesToHex(md.digest(g.getAuthPublicKey().getEncoded())));
+								participantsTextView.append("\nAuthentication hash: " + bytesToHex(md.digest(g.getAuthPublicKey().getEncoded())));
 							} catch (NoSuchAlgorithmException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							participantsTextView.append("\nPublicKey: "+((RSAPublicKey)g.getAuthPublicKey()).getModulus().toString(16)+
-									" / "+((RSAPublicKey)g.getAuthPublicKey()).getPublicExponent().toString(16));
+							//participantsTextView.append("\nPublicKey: "+((RSAPublicKey)g.getAuthPublicKey()).getModulus().toString(16)+
+							//		" / "+((RSAPublicKey)g.getAuthPublicKey()).getPublicExponent().toString(16));
 						}
 						participantsTextView.append("\n\n");
 					}
@@ -62,13 +61,11 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 			}
 		} else if (intent.getAction().equals(Constants.GET_PARAMS)) {
 			
-			String protocol = intent.getStringExtra("protocol");
-			String version = intent.getBooleanExtra("isAuth", false) ? "auth" : "non-auth";
+			String version = intent.getBooleanExtra("isAuth", false) ? (intent.getBooleanExtra("isConf", false)? "Authenticated + key confirmation" : "Authenticated") : "Non-authenticated";
 			String nonceLength = String.valueOf(intent.getIntExtra("nonceLength", 0)*8);
 			String groupKeyLength = String.valueOf(intent.getIntExtra("groupKeyLength", 0)*8);
 			String publicKeyLength = String.valueOf(intent.getIntExtra("publicKeyLength", 0)*8);
 			
-			protocolTV.setText(protocol);
 			versionTV.setText(version);
 			nonceLengthTV.setText(nonceLength);
 			groupKeyLengthTV.setText(groupKeyLength);
@@ -83,9 +80,8 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 	
-	public void setTextViews(TextView participantsTextView, TextView keyTextView, TextView protocolTV,  
+	public void setTextViews(TextView participantsTextView, TextView keyTextView,  
 			TextView versionTV, TextView nonceLengthTV, TextView groupKeyLengthTV, TextView publicKeyLengthTV) {
-		this.protocolTV = protocolTV;  
 		this.versionTV = versionTV;
 		this.nonceLengthTV = nonceLengthTV;
 		this.groupKeyLengthTV = groupKeyLengthTV;

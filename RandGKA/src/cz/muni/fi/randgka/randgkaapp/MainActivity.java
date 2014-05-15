@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
 	}
 	
 	public void moveToGKATechDecision(View view) {
-		Intent moving = new Intent(this, GKATechDecisionActivity.class);
+		Intent moving = new Intent(this, GKADecisionActivity.class);
 		startActivity(moving);
 	}
 	

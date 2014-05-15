@@ -84,6 +84,18 @@ public class GKAParticipants implements Byteable {
 		return participants2;
 	}
 	
+	public byte[] getNonces() {
+		if (getLeader()!= null && getLeader().getNonceLen() > 0) {
+			int nonceLen = getLeader().getNonceLen();
+			byte[] noncesArray = new byte[nonceLen*size()];
+			int i = 0;
+			for (GKAParticipant p : participants) {
+				System.arraycopy(p.getNonce(), 0, noncesArray, i*nonceLen, nonceLen);
+			}
+			return noncesArray;
+		} else return null;
+	}
+	
 	public List<GKAParticipant> getParticipants() {
 		return participants;
 	}

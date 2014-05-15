@@ -10,18 +10,18 @@ public class GKAProtocolParams {
 	private boolean authenticated; // version of the protocol to use - authenticated / non-authenticated
 	private int nonceLength, // length of the nonce to be used
 			publicKeyLength, 
-			keyLength; // length of the desired shared key
+			groupKeyLength;
 	private PrivateKey privateKey;
 	
 	public GKAProtocolParams() {
 		super();
 	}
 	public GKAProtocolParams(boolean authenticated, int nonceLength,
-			int keyLength, int publicKeyLength, PrivateKey privateKey) {
+			int groupKeyLength, int publicKeyLength, PrivateKey privateKey) {
 		super();
 		this.authenticated = authenticated;
 		this.nonceLength = nonceLength;
-		this.keyLength = keyLength;
+		this.groupKeyLength = groupKeyLength;
 		this.publicKeyLength = publicKeyLength;
 		this.privateKey = privateKey;
 	}
@@ -37,11 +37,11 @@ public class GKAProtocolParams {
 	public void setNonceLength(int nonceLength) {
 		this.nonceLength = nonceLength;
 	}
-	public int getKeyLength() {
-		return keyLength;
+	public int getGroupKeyLength() {
+		return groupKeyLength;
 	}
-	public void setKeyLength(int keyLength) {
-		this.keyLength = keyLength;
+	public void setGroupKeyLength(int keyLength) {
+		this.groupKeyLength = keyLength;
 	}
 	public int getPublicKeyLength() {
 		return publicKeyLength;
@@ -60,10 +60,11 @@ public class GKAProtocolParams {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (authenticated ? 1231 : 1237);
-		result = prime * result + keyLength;
+		result = prime * result + groupKeyLength;
 		result = prime * result + nonceLength;
 		result = prime * result
 				+ ((privateKey == null) ? 0 : privateKey.hashCode());
+		result = prime * result + publicKeyLength;
 		return result;
 	}
 	@Override
@@ -77,21 +78,20 @@ public class GKAProtocolParams {
 		GKAProtocolParams other = (GKAProtocolParams) obj;
 		if (authenticated != other.authenticated)
 			return false;
-		if (keyLength != other.keyLength)
+		if (groupKeyLength != other.groupKeyLength)
 			return false;
 		if (nonceLength != other.nonceLength)
 			return false;
-		if (privateKey == null) {
-			if (other.privateKey != null)
-				return false;
-		} else if (!privateKey.equals(other.privateKey))
+		if (publicKeyLength != other.publicKeyLength)
 			return false;
 		return true;
 	}
 	@Override
 	public String toString() {
 		return "GKAProtocolParams [authenticated=" + authenticated
-				+ ", nonceLength=" + nonceLength + ", keyLength=" + keyLength
+				+ ", nonceLength=" + nonceLength + ", publicKeyLength="
+				+ publicKeyLength + ", groupKeyLength=" + groupKeyLength
 				+ ", privateKey=" + privateKey + "]";
 	}
+	
 }

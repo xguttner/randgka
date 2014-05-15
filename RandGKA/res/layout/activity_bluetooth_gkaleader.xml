@@ -15,7 +15,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:text="@string/protocol"
+        android:text="@string/augot"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <Spinner
@@ -27,25 +27,7 @@
         android:layout_below="@+id/textView5" />
 
     <TextView
-        android:id="@+id/textView6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/spinner1"
-        android:text="@string/protocol_version"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <Spinner
-        android:id="@+id/spinner1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/textView2" />
-
-    <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
@@ -60,8 +42,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/textView3" />
-
+        android:layout_below="@+id/textView1" />
+    
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
@@ -106,20 +88,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView6" >
-
-        <RadioButton
-            android:id="@+id/radio0"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/auth"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-        <RadioButton
-	        android:id="@+id/radio1"
+        android:layout_below="@+id/textView2" >
+        
+		<RadioButton
+	        android:id="@+id/radio0"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:text="@string/non_auth"
+	        android:checked="true"
 	        android:textAppearance="?android:attr/textAppearanceSmall" />
+		
+        <RadioButton
+            android:id="@+id/radio1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/auth"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+        
+        <RadioButton
+            android:id="@+id/radio2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/auth_conf"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </RadioGroup>
 </RelativeLayout>

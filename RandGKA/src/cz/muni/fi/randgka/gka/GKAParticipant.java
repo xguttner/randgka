@@ -21,22 +21,26 @@ public class GKAParticipant implements Byteable {
 	private int id;
 	private boolean me;
 	private GKAParticipantRole role;
+	private byte[] nonce;
 	private BigInteger dhPublickKey;
 	private PublicKey authPublicKey;
 	private int pkLen,
-				dhLen;
+				dhLen,
+				nonceLen;
 	
-	private static final int STATIC_LENGTH = 14;
+	private static final int STATIC_LENGTH = 18;
 	
 	public GKAParticipant() {
 	}
 	
-	public GKAParticipant(int id, boolean me, GKAParticipantRole role, int pkLen, int dhLen, BigInteger dhPublicKey, PublicKey authPublicKey) {
+	public GKAParticipant(int id, boolean me, GKAParticipantRole role, int nonceLen, int pkLen, int dhLen, byte[] nonce, BigInteger dhPublicKey, PublicKey authPublicKey) {
 		this.id = id;
 		this.me = me;
 		this.role = role;
+		this.nonceLen = nonceLen;
 		this.pkLen = pkLen;
 		this.dhLen = dhLen;
+		this.nonce = nonce;
 		this.dhPublickKey = dhPublicKey;
 		this.authPublicKey = authPublicKey;
 	}
@@ -56,10 +60,10 @@ public class GKAParticipant implements Byteable {
 			case 128:
 				pkLen = 218;
 				break;
-			case 2048:
+			case 256:
 				pkLen = 394;
 				break;
-			case 4096:
+			case 512:
 				pkLen = 746;
 				break;
 			default:
@@ -112,6 +116,22 @@ public class GKAParticipant implements Byteable {
 	public void setDhLen(int dhLen) {
 		this.dhLen = 0;
 	}
+	
+	public byte[] getNonce() {
+		return nonce;
+	}
+
+	public void setNonce(byte[] nonce) {
+		this.nonce = nonce;
+	}
+
+	public int getNonceLen() {
+		return nonceLen;
+	}
+
+	public void setNonceLen(int nonceLen) {
+		this.nonceLen = nonceLen;
+	}
 
 	public GKAParticipantRole getRole() {
 		return role;
@@ -158,13 +178,16 @@ public class GKAParticipant implements Byteable {
 			return false;
 		return true;
 	}
-
+	
 	@Override
 	public String toString() {
 		return "GKAParticipant [id=" + id + ", me=" + me + ", role=" + role
-				+ ", dhPublicKey=" + dhPublickKey + ", publicKey=" + ((authPublicKey!=null)?authPublicKey.toString():"null") + "]";
+				+ ", nonce=" + Arrays.toString(nonce) + ", dhPublickKey="
+				+ dhPublickKey + ", authPublicKey=" + authPublicKey
+				+ ", pkLen=" + pkLen + ", dhLen=" + dhLen + ", nonceLen="
+				+ nonceLen + "]";
 	}
-	
+
 	@Override
 	public byte[] getBytes() {
 		byte[] bytes = new byte[length()];
@@ -175,18 +198,25 @@ public class GKAParticipant implements Byteable {
 		bytes[4] = (byte)(me?1:0);
 		bytes[5] = role.getValue();
 		
-		intBytes = ByteBuffer.allocate(4).putInt(dhLen).array();
+		intBytes = ByteBuffer.allocate(4).putInt(nonceLen).array();
 		System.arraycopy(intBytes, 0, bytes, 6, 4);
 		
-		intBytes = ByteBuffer.allocate(4).putInt(pkLen).array();
+		intBytes = ByteBuffer.allocate(4).putInt(dhLen).array();
 		System.arraycopy(intBytes, 0, bytes, 10, 4);
+		
+		intBytes = ByteBuffer.allocate(4).putInt(pkLen).array();
+		System.arraycopy(intBytes, 0, bytes, 14, 4);
+		
+		if (nonce != null) {
+			System.arraycopy(nonce, 0, bytes, STATIC_LENGTH, nonce.length);
+		}
 		
 		if (dhPublickKey != null) {
 			byte[] pcBytes = Base64.encode(dhPublickKey.toByteArray(), Base64.DEFAULT);
-			System.arraycopy(pcBytes, 0, bytes, STATIC_LENGTH, transDHLen(dhLen));
+			System.arraycopy(pcBytes, 0, bytes, STATIC_LENGTH+nonceLen, transDHLen(dhLen));
 		}
 		Log.d("len", pkLen+" "+Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT).length);
-		if (authPublicKey != null) System.arraycopy(Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT), 0, bytes, STATIC_LENGTH+transDHLen(dhLen), transPKLen(pkLen));
+		if (authPublicKey != null) System.arraycopy(Base64.encode(authPublicKey.getEncoded(), Base64.DEFAULT), 0, bytes, STATIC_LENGTH+transDHLen(dhLen)+nonceLen, transPKLen(pkLen));
 		
 		return bytes;
 	}
@@ -207,13 +237,20 @@ public class GKAParticipant implements Byteable {
 		role = GKAParticipantRole.valueOf(bytes[5]);
 		
 		System.arraycopy(bytes, 6, intBytes, 0, 4);
-		dhLen = ByteBuffer.wrap(intBytes).getInt();
+		nonceLen = ByteBuffer.wrap(intBytes).getInt();
 		
 		System.arraycopy(bytes, 10, intBytes, 0, 4);
+		dhLen = ByteBuffer.wrap(intBytes).getInt();
+		
+		System.arraycopy(bytes, 14, intBytes, 0, 4);
 		pkLen = ByteBuffer.wrap(intBytes).getInt();
 		
+		nonce = new byte[nonceLen];
+		System.arraycopy(bytes, STATIC_LENGTH, nonce, 0, nonceLen);
+		
+		
 		byte[]pcBytes = new byte[transDHLen(dhLen)];
-		System.arraycopy(bytes, 14, pcBytes, 0, transDHLen(dhLen));
+		System.arraycopy(bytes, STATIC_LENGTH+nonceLen, pcBytes, 0, transDHLen(dhLen));
 		dhPublickKey = new BigInteger(1, pcBytes);
 		
 		try {
