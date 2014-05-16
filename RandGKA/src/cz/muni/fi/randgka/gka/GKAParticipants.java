@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
 import cz.muni.fi.randgka.tools.Byteable;
 
 public class GKAParticipants implements Byteable {
@@ -168,7 +169,7 @@ public class GKAParticipants implements Byteable {
 		return null;
 	}
 	
-	public void mergeFromTO(byte[] bytes) {
+	public void mergeFromTO(byte[] bytes, int nonceLen) {
 		int offset = 1;
 		int i = 0;
 		byte participantsSize = bytes[0];
@@ -176,10 +177,13 @@ public class GKAParticipants implements Byteable {
 		while (i < participantsSize) {
 			currentParticipantBytes = new byte[bytes.length - offset];
 			System.arraycopy(bytes, offset, currentParticipantBytes, 0, bytes.length - offset);
-			GKAParticipant p = new GKAParticipant(currentParticipantBytes);
+			GKAParticipant p = new GKAParticipant();
+			p.setNonceLen(nonceLen);
+			p.fromTransferObject(currentParticipantBytes);
 			
 			if (participants.contains(p)) {
 				GKAParticipant pIn = getParticipant(p.getId());
+				Log.d("pin", pIn.toString());
 				if (!pIn.isMe()) {
 					pIn.setAuthPublicKey(p.getAuthPublicKey());
 					pIn.setName(p.getName());
@@ -189,7 +193,7 @@ public class GKAParticipants implements Byteable {
 				participants.add(p);
 			}
 			
-			offset += p.length();
+			offset += p.getTOLength();
 			i++;
 		}
 	}

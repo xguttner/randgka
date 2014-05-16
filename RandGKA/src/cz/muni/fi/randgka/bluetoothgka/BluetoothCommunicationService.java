@@ -33,6 +33,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -57,7 +58,7 @@ public class BluetoothCommunicationService extends Service {
 	private int newParticipantId;
 	private SharedPreferences sp;
 	private SecureRandom secureRandom;
-	private byte version;
+	private Integer version;
 	private Integer nonceLength,
 					groupKeyLength,
 					publicKeyLength;
@@ -98,7 +99,7 @@ public class BluetoothCommunicationService extends Service {
 		}*/
 		
 		if (intent != null) {
-			version = intent.getByteExtra("version", version);
+			version = intent.getIntExtra("version", version);
 			nonceLength = intent.getIntExtra("nonceLength", nonceLength*8)/8;
 			groupKeyLength = intent.getIntExtra("groupKeyLength", groupKeyLength*8)/8;
 			publicKeyLength = intent.getIntExtra("publicKeyLength", publicKeyLength*8)/8;
@@ -127,10 +128,18 @@ public class BluetoothCommunicationService extends Service {
 			if (listenSocketThread != null) listenSocketThread.interrupt();
 			clearLastInstance();
 			
-			GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
-			protocol.init(participants, secureRandom, params);
-			GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, 0, false, null, null));
-			sendRound(firstRound);
+			try {
+				AssetManager am = getAssets();
+				InputStream modpGroupIS = am.open("modpgroups.xml");
+				
+				GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, modpGroupIS, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
+				protocol.init(participants, secureRandom, params);
+				GKAProtocolRound firstRound = protocol.nextRound(new PMessage(MessageAction.GKA_PROTOCOL, (byte)0, 0, 0, 0, false, null, null));
+				sendRound(firstRound);
+				Log.d("RUN_GKA", "sent");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 	        
 		} else if (action.equals(Constants.GET_PARAMS)) {
 			printParams();
@@ -204,16 +213,17 @@ public class BluetoothCommunicationService extends Service {
 							if (pMessage.getLength() == 15) {
 								byte[] receivedMessageBytes = pMessage.getMessage();
 								
-								version = receivedMessageBytes[1];
-								
 								byte [] intBytes = new byte[4];
-								System.arraycopy(receivedMessageBytes, 2, intBytes, 0, 4);
+								System.arraycopy(receivedMessageBytes, 0, intBytes, 0, 4);
+								version = ByteBuffer.wrap(intBytes).getInt();
+								
+								System.arraycopy(receivedMessageBytes, 4, intBytes, 0, 4);
 								nonceLength = ByteBuffer.wrap(intBytes).getInt();
 								
-								System.arraycopy(receivedMessageBytes, 6, intBytes, 0, 4);
+								System.arraycopy(receivedMessageBytes, 8, intBytes, 0, 4);
 								groupKeyLength = ByteBuffer.wrap(intBytes).getInt();
 								
-								System.arraycopy(receivedMessageBytes, 10, intBytes, 0, 4);
+								System.arraycopy(receivedMessageBytes, 12, intBytes, 0, 4);
 								publicKeyLength = ByteBuffer.wrap(intBytes).getInt();
 								
 								printParams();
@@ -280,31 +290,44 @@ public class BluetoothCommunicationService extends Service {
 						case INIT_GKA_PROTOCOL:
 							byte[] receivedMessageBytes = pMessage.getMessage();
 							
-							version = receivedMessageBytes[0];
-	
 							byte [] intBytes = new byte[4];
-							System.arraycopy(receivedMessageBytes, 2, intBytes, 0, 4);
+							System.arraycopy(receivedMessageBytes, 1, intBytes, 0, 4);
+							version = ByteBuffer.wrap(intBytes).getInt();
+							
+							System.arraycopy(receivedMessageBytes, 5, intBytes, 0, 4);
 							nonceLength = ByteBuffer.wrap(intBytes).getInt();
 							
-							System.arraycopy(receivedMessageBytes, 6, intBytes, 0, 4);
+							System.arraycopy(receivedMessageBytes, 9, intBytes, 0, 4);
 							groupKeyLength = ByteBuffer.wrap(intBytes).getInt();
 							
-							System.arraycopy(receivedMessageBytes, 10, intBytes, 0, 4);
+							System.arraycopy(receivedMessageBytes, 13, intBytes, 0, 4);
 							publicKeyLength = ByteBuffer.wrap(intBytes).getInt();
 							
 							printParams();
 							
 							GKAParticipant me = participants.getMe();
-							me.setId(receivedMessageBytes[1]);
-							me.setDhLen(groupKeyLength);
-							me.setNonceLen(nonceLength);
-							me.setPkLen(publicKeyLength);
+							me.setId(receivedMessageBytes[0]);
 							me.setAuthPublicKey(publicKeyCryptography.getPublicKey(publicKeyLength*8));
 							
+							for (GKAParticipant p : participants.getParticipants()) {
+								p.setDhLen(groupKeyLength);
+								p.setNonceLen(nonceLength);
+								p.setPkLen(publicKeyLength);
+								Log.d("participants", p.toString());
+							}
+							
 							clearLastInstance();
-							GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
-							protocol.init(participants, secureRandom, params);
-							sendRound(protocol.nextRound(pMessage));
+							try {
+								AssetManager am = getAssets();
+								InputStream modpGroupIS = am.open("modpgroups.xml");
+							
+								GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, modpGroupIS, publicKeyCryptography.getPrivateKey(publicKeyLength*8));
+								protocol.init(participants, secureRandom, params);
+								Log.d("INIT_GKA", "RECEIVED");
+								sendRound(protocol.nextRound(pMessage));
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 							break;
 							
 						default:
@@ -449,9 +472,7 @@ public class BluetoothCommunicationService extends Service {
 	                
 	        		m.setData(pMessageBundle);
 	                m.sendToTarget();
-	                Log.d("sent", "toTar");
 	            } catch (IOException e) {
-	            	Log.d("exc", "sending");
 	                break;
 	            }
 	        }

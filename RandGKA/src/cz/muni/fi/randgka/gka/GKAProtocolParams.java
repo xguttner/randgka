@@ -1,5 +1,6 @@
 package cz.muni.fi.randgka.gka;
 
+import java.io.InputStream;
 import java.security.PrivateKey;
 
 /**
@@ -11,28 +12,30 @@ public class GKAProtocolParams {
 							AUTH = 1,
 							AUTH_CONF = 2;
 	
-	private byte version; // version of the protocol to use - authenticated / non-authenticated
+	private int version; // version of the protocol to use - authenticated / non-authenticated
 	private int nonceLength, // length of the nonce to be used
 			publicKeyLength, 
 			groupKeyLength;
 	private PrivateKey privateKey;
+	private InputStream modpFile;
 	
 	public GKAProtocolParams() {
 		super();
 	}
-	public GKAProtocolParams(byte version, int nonceLength,
-			int groupKeyLength, int publicKeyLength, PrivateKey privateKey) {
+	public GKAProtocolParams(int version, int nonceLength,
+			int groupKeyLength, int publicKeyLength, InputStream modpFile, PrivateKey privateKey) {
 		super();
 		this.version = version;
 		this.nonceLength = nonceLength;
 		this.groupKeyLength = groupKeyLength;
 		this.publicKeyLength = publicKeyLength;
+		this.modpFile = modpFile;
 		this.privateKey = privateKey;
 	}
-	public byte getVersion() {
+	public int getVersion() {
 		return version;
 	}
-	public void setVersion(byte version) {
+	public void setVersion(int version) {
 		this.version = version;
 	}
 	public int getNonceLength() {
@@ -58,6 +61,12 @@ public class GKAProtocolParams {
 	}
 	public void setPrivateKey(PrivateKey privateKey) {
 		this.privateKey = privateKey;
+	}
+	public InputStream getModpFile() {
+		return modpFile;
+	}
+	public void setModpFile(InputStream modpFile) {
+		this.modpFile = modpFile;
 	}
 	@Override
 	public int hashCode() {
