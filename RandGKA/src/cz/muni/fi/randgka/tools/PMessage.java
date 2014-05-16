@@ -247,13 +247,14 @@ public class PMessage implements Serializable, Byteable {
 		
 	}
 	
-	public void selfSign(PrivateKey privateKey, SecureRandom secureRandom) {
+	public void selfSign(PrivateKey privateKey, byte[] nonces, SecureRandom secureRandom) {
 		signed = true;
 		if (privateKey != null) {
 			try {
 				RSAPrivateKey rk = (RSAPrivateKey)privateKey;
 				Signature signature = Signature.getInstance(signAlg, "BC");
 			    signature.initSign(privateKey, secureRandom);
+			    signature.update(nonces);
 			    signature.update(getBytesNoSignature());
 			    this.signature = signature.sign();
 			    
@@ -269,11 +270,12 @@ public class PMessage implements Serializable, Byteable {
 		}
 	}
 	
-	public boolean selfVerify(PublicKey publicKey) {
+	public boolean selfVerify(PublicKey publicKey, byte[] nonces) {
 		try {
 			
 			Signature signature = Signature.getInstance(signAlg, "BC");
 			signature.initVerify(publicKey);
+			signature.update(nonces);
 		    signature.update(getBytesNoSignature());
 		    return signature.verify(this.signature);
 		    

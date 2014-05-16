@@ -20,6 +20,7 @@ public class GKAParticipant implements Byteable {
 
 	private int id;
 	private boolean me;
+	private String name;
 	private GKAParticipantRole role;
 	private byte[] nonce;
 	private BigInteger dhPublickKey;
@@ -33,8 +34,9 @@ public class GKAParticipant implements Byteable {
 	public GKAParticipant() {
 	}
 	
-	public GKAParticipant(int id, boolean me, GKAParticipantRole role, int nonceLen, int pkLen, int dhLen, byte[] nonce, BigInteger dhPublicKey, PublicKey authPublicKey) {
+	public GKAParticipant(int id, String name, boolean me, GKAParticipantRole role, int nonceLen, int pkLen, int dhLen, byte[] nonce, BigInteger dhPublicKey, PublicKey authPublicKey) {
 		this.id = id;
+		this.name = name;
 		this.me = me;
 		this.role = role;
 		this.nonceLen = nonceLen;
@@ -83,6 +85,14 @@ public class GKAParticipant implements Byteable {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public boolean isMe() {
@@ -258,6 +268,69 @@ public class GKAParticipant implements Byteable {
 			System.arraycopy(bytes, STATIC_LENGTH+transDHLen(dhLen), pcBytes, 0, transPKLen(pkLen));
 			Log.d("from", pkLen+" "+Arrays.toString(pcBytes));
 			pcBytes = Base64.decode(pcBytes, Base64.DEFAULT);
+			authPublicKey = KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(pcBytes));
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public byte[] getTransferObject() {
+		byte[] bytes = new byte[getTOLength()];
+		
+		byte [] intBytes = ByteBuffer.allocate(4).putInt(id).array();
+		System.arraycopy(intBytes, 0, bytes, 0, 4);
+		
+		intBytes = ByteBuffer.allocate(4).putInt(name.length()).array();
+		System.arraycopy(intBytes, 0, bytes, 4, 4);
+		
+		byte[] pkEnc = authPublicKey.getEncoded();
+		int pkEncLen = pkEnc.length;
+		
+		intBytes = ByteBuffer.allocate(4).putInt(pkEncLen).array();
+		System.arraycopy(intBytes, 0, bytes, 8, 4);
+		
+		System.arraycopy(name.getBytes(), 0, bytes, 12, name.length());
+		
+		System.arraycopy(nonce, 0, bytes, 12+name.length(), nonceLen);
+		
+		System.arraycopy(pkEnc, 0, bytes, 12+name.length()+nonceLen, pkEncLen);
+		
+		return bytes;
+	}
+	
+	public int getTOLength() {
+		return 4+4+4+name.length()+nonceLen+pkLen;
+	}
+	
+	public void fromTransferObject(byte[] bytes) {
+		byte [] intBytes = new byte[4];
+		System.arraycopy(bytes, 0, intBytes, 0, 4);
+		id = ByteBuffer.wrap(intBytes).getInt();
+		
+		me = false;
+		role = id == 0 ? GKAParticipantRole.LEADER : GKAParticipantRole.MEMBER;
+		
+		System.arraycopy(bytes, 4, intBytes, 0, 4);
+		int nameLen = ByteBuffer.wrap(intBytes).getInt();
+		
+		System.arraycopy(bytes, 8, intBytes, 0, 4);
+		int pkEncLen = ByteBuffer.wrap(intBytes).getInt();
+		
+		byte[]nameBytes = new byte[nameLen];
+		System.arraycopy(bytes, 12, name, 0, nameLen);
+		name = new String(nameBytes);
+		
+		nonce = new byte[nonceLen];
+		System.arraycopy(bytes, 12+nameLen, nonce, 0, nonceLen);
+		
+		try {
+			byte[] pcBytes = new byte[pkEncLen];
+			System.arraycopy(bytes, 12+nameLen+nonceLen, pcBytes, 0, pkEncLen);
+			Log.d("from", pkLen+" "+Arrays.toString(pcBytes));
 			authPublicKey = KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(pcBytes));
 		} catch (InvalidKeySpecException e) {
 			e.printStackTrace();

@@ -144,4 +144,54 @@ public class GKAParticipants implements Byteable {
 		}
 	}
 
+	public int getTOLength() {
+		int length = 0;
+		if (participants != null) {
+			for (GKAParticipant p : participants) {
+				length += p.getTOLength();
+			}
+		}
+		return length+1;
+	}
+	
+	public byte[] getTransferObject() {
+		try {
+			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+			bStream.write(participants.size());
+			for (GKAParticipant p : participants) {
+					bStream.write(p.getTransferObject());
+			}
+			return bStream.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public void mergeFromTO(byte[] bytes) {
+		int offset = 1;
+		int i = 0;
+		byte participantsSize = bytes[0];
+		byte[] currentParticipantBytes = null;
+		while (i < participantsSize) {
+			currentParticipantBytes = new byte[bytes.length - offset];
+			System.arraycopy(bytes, offset, currentParticipantBytes, 0, bytes.length - offset);
+			GKAParticipant p = new GKAParticipant(currentParticipantBytes);
+			
+			if (participants.contains(p)) {
+				GKAParticipant pIn = getParticipant(p.getId());
+				if (!pIn.isMe()) {
+					pIn.setAuthPublicKey(p.getAuthPublicKey());
+					pIn.setName(p.getName());
+					pIn.setNonce(p.getNonce());
+				}
+			} else {
+				participants.add(p);
+			}
+			
+			offset += p.length();
+			i++;
+		}
+	}
+	
 }

@@ -126,8 +126,7 @@ public class GKALeaderActivity extends Activity {
 			bpsIntent.putExtra("nonceLength", nonceLength);
 			bpsIntent.putExtra("groupKeyLength", groupKeyLength);
 			bpsIntent.putExtra("publicKeyLength", publicKeyLength);
-			bpsIntent.putExtra("isAuth", authRadio.isChecked());
-			bpsIntent.putExtra("isAuthConf", authConfRadio.isChecked());
+			bpsIntent.putExtra("version", authRadio.isChecked()?1:(authConfRadio.isChecked()?2:0));
 			bpsIntent.putExtra("freshKey", freshKey);
 			
 			bpsIntent.setAction(Constants.SERVER_START);

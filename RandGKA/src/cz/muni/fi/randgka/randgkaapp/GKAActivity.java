@@ -31,8 +31,8 @@ public class GKAActivity extends Activity {
 		setContentView(R.layout.activity_gkaprotocol);
 		
 		TextView versionTV = (TextView)findViewById(R.id.textView15);
-		TextView nonceLengthTV = (TextView)findViewById(R.id.textView8);
-		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView5);
+		TextView nonceLengthTV = (TextView)findViewById(R.id.textView5);
+		TextView groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
 		TextView publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
 		TextView protocolParticipantsTV = (TextView)findViewById(R.id.textView13);
 		TextView gkaTV = (TextView)findViewById(R.id.textView11);
@@ -41,6 +41,7 @@ public class GKAActivity extends Activity {
 		protocolFilter.addAction(Constants.GET_PARTICIPANTS);
 		protocolFilter.addAction(Constants.GET_GKA_KEY);
 		protocolFilter.addAction(Constants.GET_PARAMS);
+		protocolFilter.addAction(ProtocolBroadcastReceiver.PRINT_DEVICE);
 		receiver = new ProtocolBroadcastReceiver();
 		receiver.setTextViews(protocolParticipantsTV, gkaTV, versionTV, nonceLengthTV, groupKeyLengthTV, publicKeyLengthTV);
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);

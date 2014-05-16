@@ -31,9 +31,12 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 	    return builder.toString();
 	}
 	
+	public static final String GET_PARTICIPANTS = "get_participants",
+							PRINT_DEVICE = "print_device";
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if (intent.getAction().equals(Constants.GET_PARTICIPANTS)) {
+		if (intent.getAction().equals(GET_PARTICIPANTS)) {
 			if (participantsTextView != null) {
 				participantsTextView.setText("");
 				BluetoothGKAParticipants gkaParticipants = (BluetoothGKAParticipants)intent.getSerializableExtra("participants");
@@ -61,7 +64,7 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 			}
 		} else if (intent.getAction().equals(Constants.GET_PARAMS)) {
 			
-			String version = intent.getBooleanExtra("isAuth", false) ? (intent.getBooleanExtra("isConf", false)? "Authenticated + key confirmation" : "Authenticated") : "Non-authenticated";
+			String version = intent.getIntExtra("version", 0)!=0 ? (intent.getIntExtra("version", 1)==2 ? "Authenticated + key confirmation" : "Authenticated") : "Non-authenticated";
 			String nonceLength = String.valueOf(intent.getIntExtra("nonceLength", 0)*8);
 			String groupKeyLength = String.valueOf(intent.getIntExtra("groupKeyLength", 0)*8);
 			String publicKeyLength = String.valueOf(intent.getIntExtra("publicKeyLength", 0)*8);
@@ -77,6 +80,8 @@ public class ProtocolBroadcastReceiver extends BroadcastReceiver {
 				byte[] key = intent.getByteArrayExtra("key");
 				keyTextView.append((new BigInteger(key)).toString(16));
 			}
+		} else if (intent.getAction().equals(PRINT_DEVICE)) {
+			participantsTextView.append(intent.getStringExtra("device")+"\n");
 		}
 	}
 	
