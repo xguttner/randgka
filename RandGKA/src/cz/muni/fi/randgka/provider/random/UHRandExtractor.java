@@ -3,6 +3,7 @@ package cz.muni.fi.randgka.provider.random;
 import java.security.SecureRandomSpi;
 import java.util.Map.Entry;
 
+import android.util.Log;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 import cz.muni.fi.randgka.tools.ByteSequence;
@@ -182,17 +183,20 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	
 	@Override
 	protected byte[] engineGenerateSeed(int numBytes) {
+		Log.d("generate", "seed");
 		return getBits(numBytes*8);
 	}
 
 	@Override
 	protected void engineNextBytes(byte[] bytes) {
+		Log.d("next", "bytes");
 		System.arraycopy(getBits(bytes.length*8), 0, bytes, 0, bytes.length);
 	}
 
 	@Override
 	protected void engineSetSeed(byte[] seed) {
 		// not needed
+		Log.d("set", "seed");
 	}
 	
 	/**
@@ -200,6 +204,7 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	 * @return byte array of random bits of the given length
 	 */
 	private byte[] getBits(int length) {
+		Log.d("bits demanded",length+"");
 		int lengthLeft = length;
 		ByteSequence returnSequence = new ByteSequence();
 		ByteSequence actualSequence = null;

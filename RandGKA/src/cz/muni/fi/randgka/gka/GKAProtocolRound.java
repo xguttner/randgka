@@ -7,7 +7,8 @@ import cz.muni.fi.randgka.tools.PMessage;
 
 public class GKAProtocolRound {
 	
-	public static final int CONTINUE = 2,
+	public static final int PRINT_PARTICIPANTS = 3,
+							CONTINUE = 2,
 							ERROR = 1,
 							SUCCESS = 0;
 	

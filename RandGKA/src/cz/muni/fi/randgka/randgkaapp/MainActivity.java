@@ -18,15 +18,8 @@ public class MainActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.settings, menu);
+		getMenuInflater().inflate(R.menu.empty, menu);
 		return true;
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-  		startActivity(new Intent(this, SettingsActivity.class));
-  		return true;
 	}
 
 	public void moveToMinEntropySourceAppActivity(View view) {
@@ -45,7 +38,7 @@ public class MainActivity extends Activity {
 	}
 	
 	public void moveToPublicKeyCryptographyAppActivity(View view) {
-		Intent moving = new Intent(this, PublicKeyCryptographyAppActivity.class);
+		Intent moving = new Intent(this, LongTermKeyAppActivity.class);
 		startActivity(moving);
 	}
 }

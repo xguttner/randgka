@@ -167,7 +167,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	public void onPreviewFrame(byte[] newData, Camera camera) {
 		ByteSequence data = null;
 		camera.addCallbackBuffer(imageBuffer);
-
+		Log.d("new", "frame");
 		try {
 			frameNo++;
 			

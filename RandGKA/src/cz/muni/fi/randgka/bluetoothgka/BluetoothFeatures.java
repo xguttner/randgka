@@ -1,10 +1,6 @@
 package cz.muni.fi.randgka.bluetoothgka;
 
-import cz.muni.fi.randgka.tools.Byteable;
-
-public class BluetoothFeatures implements Byteable {
-	
-	private static final int MAC_ADDRESS_LENGTH = 17;
+public class BluetoothFeatures {
 	
 	private String macAddress;
 	private byte nameLength;
@@ -17,10 +13,6 @@ public class BluetoothFeatures implements Byteable {
 		this.macAddress = macAddress;
 		this.nameLength = (byte)name.length();
 		this.name = name;
-	}
-
-	public BluetoothFeatures(byte[] bytes) {
-		fromBytes(bytes);
 	}
 	
 	public String getMacAddress() {
@@ -69,35 +61,5 @@ public class BluetoothFeatures implements Byteable {
 	public String toString() {
 		return "BluetoothGKAParticipantFeatures [macAddress=" + macAddress
 				+ ", nameLength=" + nameLength + ", name=" + name + "]";
-	}
-
-	@Override
-	public byte[] getBytes() {
-		byte[] bytes = new byte[length()];
-		
-		System.arraycopy(macAddress.getBytes(), 0, bytes, 0, MAC_ADDRESS_LENGTH);
-		bytes[17] = nameLength;
-		
-		System.arraycopy(name.getBytes(), 0, bytes, 18, nameLength);
-		
-		return bytes;
-	}
-
-	@Override
-	public int length() {
-		return MAC_ADDRESS_LENGTH + nameLength + 1;
-	}
-
-	@Override
-	public void fromBytes(byte[] bytes) {
-		byte[] macBytes = new byte[MAC_ADDRESS_LENGTH];
-		System.arraycopy(bytes, 0, macBytes, 0, MAC_ADDRESS_LENGTH);
-		macAddress = new String(macBytes);
-		
-		nameLength = bytes[17];
-			
-		byte[] nameBytes = new byte[nameLength];
-		System.arraycopy(bytes, 18, nameBytes, 0, nameLength);
-		name = new String(nameBytes);
 	}
 }

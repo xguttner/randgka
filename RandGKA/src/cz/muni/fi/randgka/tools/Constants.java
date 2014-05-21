@@ -32,6 +32,9 @@ public final class Constants {
 	public static final int MINENTROPY_DATA_RC = 1877;
 
 	public static final int RANDOM_DATA_RC = 1878;
+	
+	public static final int REQUEST_ENABLE_BT = 1785;
+	public static final int REQUEST_DISCOVERABLE_BT = 1786;
 
 	/**
 	 * Message whats 
@@ -39,12 +42,14 @@ public final class Constants {
 	public static final int BROADCAST_PARTICIPANTS = 2877;
 	
 	public static final int RECEIVED_DATA = 2878;
-
-	/**
-	 * sig len
-	 */
-	public static final int SIGNATURE_LENGTH = 512;
 	
 	public static final String BLUETOOTH_GKA = "Bluetooth";
+	
 	public static final String WIFI_GKA = "Wi-Fi Direct";
+
+	public static final String SHOW_RETRIEVE_KEY = "cz.muni.fi.androidrandextr.SHOW_RETRIEVE_KEY";
+
+	public static final String RETRIEVE_KEY = "cz.muni.fi.androidrandextr.RETRIEVE_KEY";
+
+	public static final String KEY = "cz.muni.fi.androidrandextr.KEY";
 }

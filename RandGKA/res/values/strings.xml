@@ -6,13 +6,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="rand_source">Randomness Source</string>
     <string name="rand_extractor">Randomness Extractor</string>
-    <string name="uh_rand_extractor">Universal-Hash RE</string>
     <string name="source_type">Source type</string>
     <string name="camera">Camera</string>
-    <string name="microphone">Microphone</string>
-    <string name="source_data_type">Source Data Type</string>
-    <string name="preprocessed">Preprocessed</string>
-    <string name="raw">Raw</string>
     <string name="source_output_method">Source Output Method</string>
     <string name="sopByteArray">Byte Array</string>
     <string name="sopFile">File</string>
@@ -37,7 +32,6 @@
     <string name="title_activity_gkaprotocol_random_data">GKAProtocolRandomDataActivity</string>
     <string name="title_activity_public_key_cryptography_app">PublicKeyCryptographyAppActivity</string>
     <string name="public_key_cryptography">Public-Key Cryptography</string>
-    <string name="generate_key_pair">Generate Key Pair</string>
     <string name="my_certificate">My Certificate</string>
     <string name="title_activity_gkaprotocol_print_key_app">GKAProtocolPrintKeyAppActivity</string>
     <string name="title_activity_rand_extractor2_app">RandExtractor2AppActivity</string>
@@ -72,4 +66,10 @@
 	<string name="fresh_key">Use fresh long-term key</string>
 	<string name="continu">Continue</string>
 	<string name="augot">Augot protocol</string>
+	<string name="retrieve_key">Retrieve key</string>
+	<string name="long_term_keys">Long-term keys</string>
+	<string name="output_file">Output file (empty = display sequence)</string>
+	<string name="output_length">Output length (bits)</string>
+	<string name="key_length">Key length</string>
+	<string name="random_source">Randomness source</string>
 </resources>

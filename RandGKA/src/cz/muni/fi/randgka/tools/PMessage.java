@@ -10,7 +10,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 
 import android.os.Bundle;
@@ -18,14 +17,13 @@ import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
 
-public class PMessage implements Serializable, Byteable {
+public class PMessage implements Serializable {
 	
 	private static final long serialVersionUID = 7176163014773441688L;
 
-	private static final int STATIC_LENGTH = 15;
+	private static final int STATIC_LENGTH = 14;
 	private static String signAlg = "SHA256withRSA";
 	
-	private MessageAction action;
 	private byte roundNo;
 	private int originatorId;
 	private int length;
@@ -43,8 +41,7 @@ public class PMessage implements Serializable, Byteable {
 		fromBytes(pMessageInBytes);
 	}
 
-	public PMessage(MessageAction action, byte roundNo, int originatorId, int length, int sigLength, boolean signed, byte[] message, byte[] signature) {
-		this.action = action;
+	public PMessage(byte roundNo, int originatorId, int length, int sigLength, boolean signed, byte[] message, byte[] signature) {
 		this.roundNo = roundNo;
 		this.originatorId = originatorId;
 		this.length = length;
@@ -69,18 +66,17 @@ public class PMessage implements Serializable, Byteable {
 		byte[] sigLengthBytes = ByteBuffer.allocate(4).putInt(sigLength).array();
 		
 		byte[] rv = new byte[length+STATIC_LENGTH];
-		rv[0] = action.getValue();
-		rv[1] = roundNo;
+		rv[0] = roundNo;
 		
 		byte [] originatorIdBytes = ByteBuffer.allocate(4).putInt(originatorId).array();
 		
-		System.arraycopy(originatorIdBytes, 0, rv, 2, 4);
-		System.arraycopy(lengthBytes, 0, rv, 6, 4);
-		System.arraycopy(sigLengthBytes, 0, rv, 10, 4);
+		System.arraycopy(originatorIdBytes, 0, rv, 1, 4);
+		System.arraycopy(lengthBytes, 0, rv, 5, 4);
+		System.arraycopy(sigLengthBytes, 0, rv, 9, 4);
 		
-		rv[14] = (byte)((signed)?1:0);
+		rv[13] = (byte)((signed)?1:0);
 		
-		System.arraycopy(message, 0, rv, STATIC_LENGTH, length);
+		if (length > 0) System.arraycopy(message, 0, rv, STATIC_LENGTH, length);
 		
 		return rv;
 	}
@@ -96,14 +92,6 @@ public class PMessage implements Serializable, Byteable {
 		rv = Base64.encode(rv, Base64.DEFAULT);
 		
 		return rv;
-	}
-	
-	public MessageAction getAction() {
-		return action;
-	}
-
-	public void setAction(MessageAction action) {
-		this.action = action;
 	}
 
 	public byte getRoundNo() {
@@ -164,7 +152,7 @@ public class PMessage implements Serializable, Byteable {
 
 	@Override
 	public String toString() {
-		return "PMessage [action=" + action + ", roundNo=" + roundNo
+		return "PMessage [roundNo=" + roundNo
 				+ ", originatorId=" + originatorId + ", length=" + length
 				+ ", signed=" + signed + ", message="
 				+ Arrays.toString(message) + ", signature="
@@ -175,7 +163,6 @@ public class PMessage implements Serializable, Byteable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((action == null) ? 0 : action.hashCode());
 		result = prime * result + length;
 		result = prime * result + Arrays.hashCode(message);
 		result = prime * result + originatorId;
@@ -194,8 +181,6 @@ public class PMessage implements Serializable, Byteable {
 		if (getClass() != obj.getClass())
 			return false;
 		PMessage other = (PMessage) obj;
-		if (action != other.action)
-			return false;
 		if (length != other.length)
 			return false;
 		if (!Arrays.equals(message, other.message))
@@ -211,53 +196,50 @@ public class PMessage implements Serializable, Byteable {
 		return true;
 	}
 
-	@Override
 	public int length() {
 		return length + STATIC_LENGTH + (signed?sigLength:0);
 	}
 
-	@Override
 	public void fromBytes(byte[] pMessageInBytes) {
 		pMessageInBytes = Base64.decode(pMessageInBytes, Base64.DEFAULT);
-		
-		action = MessageAction.valueOf(pMessageInBytes[0]);
-		roundNo = pMessageInBytes[1];
+		roundNo = pMessageInBytes[0];
 		
 		byte[] originatorIdBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 2, originatorIdBytes, 0, 4);
+		System.arraycopy(pMessageInBytes, 1, originatorIdBytes, 0, 4);
 		originatorId = ByteBuffer.wrap(originatorIdBytes).getInt();
 		
 		byte[] lengthBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 6, lengthBytes, 0, 4);
+		System.arraycopy(pMessageInBytes, 5, lengthBytes, 0, 4);
 		length = ByteBuffer.wrap(lengthBytes).getInt();
 		
 		byte[] sigLengthBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 10, sigLengthBytes, 0, 4);
+		System.arraycopy(pMessageInBytes, 9, sigLengthBytes, 0, 4);
 		sigLength = ByteBuffer.wrap(sigLengthBytes).getInt();
 		
-		signed = (pMessageInBytes[14] == (byte)1)?true:false;
+		signed = (pMessageInBytes[13] == (byte)1)?true:false;
 		
 		message = new byte[length];
-		System.arraycopy(pMessageInBytes, 15, message, 0, length);
+		System.arraycopy(pMessageInBytes, 14, message, 0, length);
 		
 		if (signed) {
 			signature = new byte[sigLength];
-			System.arraycopy(pMessageInBytes, length+15, signature, 0, sigLength);
+			System.arraycopy(pMessageInBytes, length+14, signature, 0, sigLength);
 		}
 		
 	}
 	
-	public void selfSign(PrivateKey privateKey, byte[] nonces, SecureRandom secureRandom) {
+	public void selfSign(PrivateKey privateKey, byte[] nonces, SecureRandom secureRandom, int signLength) {
 		signed = true;
 		if (privateKey != null) {
 			try {
-				RSAPrivateKey rk = (RSAPrivateKey)privateKey;
+				this.sigLength = signLength;
+				Log.d("signedby", Arrays.toString(nonces)+" "+Arrays.toString(getBytesNoSignature()));
 				Signature signature = Signature.getInstance(signAlg, "BC");
 			    signature.initSign(privateKey, secureRandom);
 			    signature.update(nonces);
 			    signature.update(getBytesNoSignature());
 			    this.signature = signature.sign();
-			    
+			    Log.d("signature", Arrays.toString(this.signature));
 			} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
 			} catch (NoSuchProviderException e) {
@@ -272,11 +254,13 @@ public class PMessage implements Serializable, Byteable {
 	
 	public boolean selfVerify(PublicKey publicKey, byte[] nonces) {
 		try {
+			Log.d("verifiedby", Arrays.toString(nonces)+" "+Arrays.toString(getBytesNoSignature()));
 			
 			Signature signature = Signature.getInstance(signAlg, "BC");
 			signature.initVerify(publicKey);
 			signature.update(nonces);
 		    signature.update(getBytesNoSignature());
+		    Log.d("signature", Arrays.toString(this.signature));
 		    return signature.verify(this.signature);
 		    
 		} catch (NoSuchAlgorithmException e) {

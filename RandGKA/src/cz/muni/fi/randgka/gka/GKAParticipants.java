@@ -3,12 +3,14 @@ package cz.muni.fi.randgka.gka;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.TreeSet;
 
 import android.util.Log;
-import cz.muni.fi.randgka.tools.Byteable;
 
-public class GKAParticipants implements Byteable {
+public class GKAParticipants {
 
 	protected List<GKAParticipant> participants;
 	
@@ -90,8 +92,15 @@ public class GKAParticipants implements Byteable {
 			int nonceLen = getLeader().getNonceLen();
 			byte[] noncesArray = new byte[nonceLen*size()];
 			int i = 0;
+			Collections.sort(participants, new Comparator<GKAParticipant>() {
+				@Override
+				public int compare(GKAParticipant g0, GKAParticipant g1) {
+					return g0.getId() - g1.getId();
+				}
+			});
 			for (GKAParticipant p : participants) {
 				System.arraycopy(p.getNonce(), 0, noncesArray, i*nonceLen, nonceLen);
+				i++;
 			}
 			return noncesArray;
 		} else return null;
@@ -103,46 +112,6 @@ public class GKAParticipants implements Byteable {
 
 	public void setParticipants(List<GKAParticipant> participants) {
 		this.participants = participants;
-	}
-
-	@Override
-	public byte[] getBytes() {
-		try {
-			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-			bStream.write(participants.size());
-			for (GKAParticipant p : participants) {
-					bStream.write(p.getBytes());
-			}
-			return bStream.toByteArray();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	@Override
-	public int length() {
-		int length = 1;
-		for (GKAParticipant p : participants) {
-			length += p.length();
-		}
-		return length;
-	}
-
-	@Override
-	public void fromBytes(byte[] bytes) {
-		int offset = 1;
-		int i = 0;
-		byte participantsSize = bytes[0];
-		byte[] currentParticipantBytes = null;
-		while (i < participantsSize) {
-			currentParticipantBytes = new byte[bytes.length - offset];
-			System.arraycopy(bytes, offset, currentParticipantBytes, 0, bytes.length - offset);
-			GKAParticipant p = new GKAParticipant(currentParticipantBytes);
-			add(p);
-			offset += p.length();
-			i++;
-		}
 	}
 
 	public int getTOLength() {
@@ -192,7 +161,7 @@ public class GKAParticipants implements Byteable {
 			} else {
 				participants.add(p);
 			}
-			
+			 
 			offset += p.getTOLength();
 			i++;
 		}

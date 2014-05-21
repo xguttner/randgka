@@ -27,33 +27,25 @@
         android:onClick="moveToRandExtractor2AppActivity"
         android:text="@string/rand_extractor" />
 
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/button5"
-        android:onClick="moveToGKATechDecision"
-        android:text="@string/gka" />
-
-    <!-- <Button
-        android:id="@+id/button4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/button3"
-        android:onClick="moveToWifiGKA"
-        android:text="@string/wifi_gka" />
-
      <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/button4"
+        android:layout_below="@+id/button5"
         android:onClick="moveToPublicKeyCryptographyAppActivity"
-        android:text="@string/public_key_cryptography" /> -->
+        android:text="@string/long_term_keys" />
+    
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/button2"
+        android:onClick="moveToGKATechDecision"
+        android:text="@string/gka" />
+
+    
 </RelativeLayout>
