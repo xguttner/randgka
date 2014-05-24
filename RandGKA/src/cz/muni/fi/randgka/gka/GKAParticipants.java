@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -36,7 +37,19 @@ public class GKAParticipants implements Serializable {
 	}
 	
 	public void add(GKAParticipant gkaParticipant) {
-		participants.add(gkaParticipant);
+		if (participants != null) {
+			participants.add(gkaParticipant);
+		}
+	}
+	
+	public boolean contains(byte[] address) {
+		if (participants != null) {
+			for (GKAParticipant p : participants) {
+				Log.d("ar", Arrays.toString(address)+" "+Arrays.toString(p.getAddress()));
+				if (Arrays.equals(address, p.getAddress())) return true;
+			}
+		}
+		return false;
 	}
 	
 	public void remove(int id) {

@@ -167,7 +167,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	public void onPreviewFrame(byte[] newData, Camera camera) {
 		ByteSequence data = null;
 		camera.addCallbackBuffer(imageBuffer);
-		Log.d("new", "frame");
 		try {
 			frameNo++;
 			
@@ -312,6 +311,8 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		// set values to be seen from onPreviewFrame method
 		this.sampleNumber = (int)Math.ceil((double)minEntropyDataLength/getBitsPerSample(preprocessingFlag));
 		this.preprocessingFlag = preprocessingFlag;
+		
+		Log.d("melen", minEntropyDataLength+" ");
 		
 		try {
 			// decide about storing

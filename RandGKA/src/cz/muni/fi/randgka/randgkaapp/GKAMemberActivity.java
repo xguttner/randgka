@@ -27,7 +27,6 @@ public class GKAMemberActivity extends Activity {
 	private BluetoothAdapter bluetoothAdapter;
 	private BroadcastReceiver discoveryBR;
 	
-	private boolean freshKey;
 	private String technology;
 	
 	@Override
@@ -37,7 +36,6 @@ public class GKAMemberActivity extends Activity {
 		
 		devicesSpinner = (Spinner)findViewById(R.id.spinner1);
 		
-		freshKey = getIntent().getBooleanExtra("freshKey", false);
 		technology = getIntent().getStringExtra("technology");
 		
 		if (technology.equals(Constants.BLUETOOTH_GKA)) {
@@ -76,6 +74,9 @@ public class GKAMemberActivity extends Activity {
 		        devices.add(new BluetoothDeviceToDisplay(device));
 		    }
 		    devicesSpinner.setAdapter(devices);
+		    
+		    bluetoothAdapter.startDiscovery();
+		    discoveryRunning = true;
 		}
 	}
 
@@ -107,13 +108,8 @@ public class GKAMemberActivity extends Activity {
 			Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
 			commServiceIntent.setAction(BluetoothCommunicationService.MEMBER_RUN);
 			commServiceIntent.putExtra("bluetoothDevice", bluetoothDevice);
-			commServiceIntent.putExtra("freshKey", freshKey);
 			commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
 			startService(commServiceIntent);
-			
-			Intent moving = new Intent(this, GKAActivity.class);
-			moving.putExtra("technology", technology);
-			startActivity(moving);
 		}
 	}
  

@@ -1,10 +1,5 @@
 package cz.muni.fi.randgka.randgkaapp;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
-
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.wifigka.WifiCommunicationService;
@@ -13,6 +8,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,7 +21,7 @@ public class GKADecisionActivity extends Activity {
 	
 	private static final String LEADER = "Leader";
 	private static final String MEMBER = "Member";
-	private boolean returnKey;
+	private boolean returnKey = false;
 	
 	private Spinner technologySpinner,
 		roleSpinner;
@@ -39,7 +35,7 @@ public class GKADecisionActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_gka_decision);
 		
-		returnKey = getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false);
+		if (getIntent().getAction() != null) returnKey = getIntent().getAction().equals(Constants.ACTION_GKA_KEY);
 		if (returnKey) {
 			TextView externalIntentNotifierTV = (TextView) findViewById(R.id.textView3);
 			externalIntentNotifierTV.setText("Called by an external application.");
@@ -85,6 +81,7 @@ public class GKADecisionActivity extends Activity {
 					
 					Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
 					commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
+					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 				}
 				else startActivity(moving);
@@ -96,18 +93,16 @@ public class GKADecisionActivity extends Activity {
 	}
 	
 	public void moveToGKARole(View view) {
-		CheckBox freshKeyBox = (CheckBox)findViewById(R.id.checkBox1);
-		boolean freshKey = freshKeyBox.isChecked();
 		String technology = (String) technologySpinner.getSelectedItem();
 		role = (String) roleSpinner.getSelectedItem();
 		
 		moving = new Intent();
 		moving.putExtra("technology", technology);
-		moving.putExtra("freshKey", freshKey);
 		moving.putExtra("isLeader", role.equals(LEADER));
 		if (returnKey) {
 			moving.setFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT);
 			moving.putExtra(Constants.RETRIEVE_KEY, true);
+			Log.d("propagate", "one");
 		}
 		
 		if (technology.equals(Constants.BLUETOOTH_GKA)) {
@@ -120,20 +115,24 @@ public class GKADecisionActivity extends Activity {
 					
 					Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
 					commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
+					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 				}
 			}
 			else {
 				moving.setClass(this, GKAMemberActivity.class);
-				if (enabled) startActivity(moving);
+				if (enabled) {
+					startActivity(moving);
+				}
 			}
 		}
 		else if (technology.equals(Constants.WIFI_GKA)) {
 			TextView tv = (TextView) findViewById(R.id.textView4);
 			if (role.equals(LEADER)) {
-				if (isWifiConnected(true)) {
+				if (WifiCommunicationService.isWifiConnected(true)) {
 					Intent commServiceIntent = new Intent(this, WifiCommunicationService.class);
 					commServiceIntent.setAction(WifiCommunicationService.LEADER_RUN);
+					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 					
 					moving.setClass(this, GKAActivity.class);
@@ -142,11 +141,10 @@ public class GKADecisionActivity extends Activity {
 				else tv.setText(R.string.wifi_leader_connection_warning);
 			}
 			else {
-				if (isWifiConnected(false)) {
+				if (WifiCommunicationService.isWifiConnected(false)) {
 					Intent commServiceIntent = new Intent(this, WifiCommunicationService.class);
 					commServiceIntent.setAction(WifiCommunicationService.MEMBER_RUN);
-					commServiceIntent.putExtra("freshKey", freshKey);
-					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
+					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 					
 					moving.setClass(this, GKAActivity.class);
@@ -169,25 +167,6 @@ public class GKADecisionActivity extends Activity {
 		} else return true;
 		
 		return false;
-	}
-	
-	private boolean isWifiConnected(boolean isLeader) {
-		
-		try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && inetAddress.getAddress().length == 4) {
-                       	if (isLeader && inetAddress.getAddress()[3] == (byte)1) return true;
-                       	else if (!isLeader && inetAddress.getAddress()[3] != (byte)1) return true;
-                       	else return false;
-                    }
-                }
-            }
-        } catch (SocketException ex) {
-        }
-        return false;
 	}
 }
 

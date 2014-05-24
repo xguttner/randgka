@@ -22,7 +22,7 @@ public final class Constants {
 	
 	public static final String PROTOCOL_RANDOMNESS = "cz.muni.fi.androidrandextr.PROTOCOL_RANDOMNESS";
 	
-	public static final String ACTION_GKA_KEY = "cz.muni.fi.androidrandextr.ACTION_GKA_KEY";
+	public static final String ACTION_GKA_KEY = "cz.muni.fi.randgka.ACTION_GKA_KEY";
 
 	public static final String RETURN_GKA_KEY = "cz.muni.fi.androidrandextr.RETURN_GKA_KEY";
 	
@@ -51,5 +51,7 @@ public final class Constants {
 
 	public static final String RETRIEVE_KEY = "cz.muni.fi.androidrandextr.RETRIEVE_KEY";
 
-	public static final String KEY = "cz.muni.fi.androidrandextr.KEY";
+	public static final String KEY = "key";
+
+	public static final int WIFI_PORT = 6540;
 }

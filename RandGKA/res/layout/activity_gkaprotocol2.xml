@@ -101,7 +101,7 @@
     <SurfaceView
         android:id="@+id/surfaceView1"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="40dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/button2" />

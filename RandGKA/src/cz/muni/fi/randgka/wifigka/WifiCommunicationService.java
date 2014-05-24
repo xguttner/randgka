@@ -5,14 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +30,9 @@ import cz.muni.fi.randgka.gka.GKAParticipants;
 import cz.muni.fi.randgka.gka.GKAProtocol;
 import cz.muni.fi.randgka.gka.GKAProtocolParams;
 import cz.muni.fi.randgka.gka.GKAProtocolRound;
+import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.randgkaapp.GKAActivity;
+import cz.muni.fi.randgka.randgkaapp.GKADecisionActivity;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.LengthsNotEqualException;
 import cz.muni.fi.randgka.tools.LongTermKeyProvider;
@@ -49,6 +57,8 @@ public class WifiCommunicationService extends Service {
 		private static final String MODP_GROUP_FILE = "modpgroups.xml";
 
 		public static final String STOP = "STOP";
+
+		public static final String SET_SECURE_RANDOM = "SET_SECURE_RANDOM";
 		
 		private GKAParticipants participants;
 		private Map<byte[], CommunicationThread> threads;
@@ -68,63 +78,14 @@ public class WifiCommunicationService extends Service {
 		
 		@Override
 		public void onCreate() {
-			/*Log.d("right", "way2");
-			try {
-				init();
-				
-				context = this.getBaseContext();
-				lbm = LocalBroadcastManager.getInstance(this);
-				longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			} catch (NoSuchProviderException e) {
-				e.printStackTrace();
-			}*/
 		}
 		
-		private void init() throws NoSuchAlgorithmException, NoSuchProviderException {
-			init(null);
-		}
-		
-		private void init(Intent intent) throws NoSuchAlgorithmException, NoSuchProviderException {
+		private void initialize(Intent intent) throws NoSuchAlgorithmException, NoSuchProviderException {
 			returnKey = false;
 			participants = new GKAParticipants();
 			if (threads != null) {
 				for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
-					if (e.getValue() != null) e.getValue().cancel();
-				}
-			}
-			threads = new HashMap<byte[], CommunicationThread>();
-			newParticipantId = 0;
-			pHandler = new PMessageHandler();
-			
-			protocol = new AugotGKA();
-			
-			//Provider pr = new RandGKAProvider();
-		    //try {
-				secureRandom = new SecureRandom();// SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, pr);
-			/*} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			}*/
-			
-			if (intent != null) {
-				version = intent.getIntExtra("version", GKAProtocolParams.NON_AUTH);
-				nonceLength = intent.getIntExtra("nonceLength", 0)/8;
-				groupKeyLength = intent.getIntExtra("groupKeyLength", 0)/8;
-				publicKeyLength = intent.getIntExtra("publicKeyLength", 0)/8;
-				
-				returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
-				if (intent.getBooleanExtra("freshKey", false)) longTermKeyProvider.generateKeys(publicKeyLength*8);
-			}
-		}
-		
-
-		private void initialize() {
-			returnKey = false;
-			participants = new GKAParticipants();
-			if (threads != null) {
-				for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
-					if (e.getValue() != null) e.getValue().cancel();
+					if (e.getValue() != null) e.getValue().interrupt();
 				}
 			}
 			threads = new HashMap<byte[], CommunicationThread>();
@@ -142,7 +103,10 @@ public class WifiCommunicationService extends Service {
 				
 			context = this.getBaseContext();
 			lbm = LocalBroadcastManager.getInstance(this);
-			longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+
+			if (intent != null) {
+				returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
+			}
 		}
 		
 		private void initRun(Intent intent) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
@@ -150,9 +114,6 @@ public class WifiCommunicationService extends Service {
 			nonceLength = intent.getIntExtra("nonceLength", 0)/8;
 			groupKeyLength = intent.getIntExtra("groupKeyLength", 0)/8;
 			publicKeyLength = intent.getIntExtra("publicKeyLength", 0)/8;
-			
-			returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
-			if (intent.getBooleanExtra("freshKey", false)) longTermKeyProvider.generateKeys(publicKeyLength*8);
 			
 			participants.initialize(nonceLength, publicKeyLength);
 			Log.d("pklen", publicKeyLength+ " ");
@@ -165,14 +126,18 @@ public class WifiCommunicationService extends Service {
 				String action = intent.getAction();
 
 				if (action.equals(LEADER_RUN)) {
-					initialize();
+					initialize(intent);
 					actAsServer(this);
 				} 
 				else if (action.equals(MEMBER_RUN)) {
-					initialize();
-					returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
+					initialize(intent);
 					connectToServer(this);
 				} 
+				else if (action.equals(SET_SECURE_RANDOM)) {
+					Provider pr = new RandGKAProvider();
+				    secureRandom = new SecureRandom(); //.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+				    longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+				}
 				else if (action.equals(GKA_RUN)) {
 					initRun(intent);
 					if (listenSocketThread != null) listenSocketThread.interrupt();
@@ -217,7 +182,7 @@ public class WifiCommunicationService extends Service {
 		private void sendRound(GKAProtocolRound pr) {
 			if (pr != null) {
 				if (pr.getActionCode() == GKAProtocolRound.SUCCESS) {
-					if (!returnKey) printKey();
+					retrieveKey(returnKey);
 				} 
 				else if (pr.getActionCode() == GKAProtocolRound.PRINT_PARTICIPANTS) {
 					Intent getDevices = new Intent(GKAActivity.GET_PARTICIPANTS);
@@ -233,9 +198,8 @@ public class WifiCommunicationService extends Service {
 			}
 		}
 		
-		private void printKey() {
-			Intent printKeyIntent = new Intent(GKAActivity.GET_GKA_KEY);
-			Log.d("key",protocol.getKey().toByteArray()+"");
+		private void retrieveKey(boolean returnKey) {
+			Intent printKeyIntent = new Intent(returnKey ? GKAActivity.SHOW_RETRIEVE_KEY : GKAActivity.GET_GKA_KEY);
 		    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
 		    lbm.sendBroadcast(printKeyIntent);
 		}
@@ -243,15 +207,23 @@ public class WifiCommunicationService extends Service {
 		@Override
 		public void onDestroy() {
 			super.onDestroy();
+			if (pHandler != null) {
+				pHandler.removeCallbacksAndMessages(null);
+				pHandler = null;
+			}
 			if (threads != null) {
 				for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
-					if (e.getValue() != null) e.getValue().cancel();
+					if (e.getValue() != null) {
+						e.getValue().interrupt();
+					}
 				}
+				threads.clear();
 			}
-			pHandler.removeCallbacksAndMessages(null);
-			pHandler = null;
-			participants = null;
-			if (listenSocketThread != null) listenSocketThread.interrupt();
+			if (participants != null) participants = null;
+			if (listenSocketThread != null) {
+				listenSocketThread.interrupt();
+			}
+			Log.d("destroyed", "ok");
 		}
 		
 		private class PMessageHandler extends Handler {
@@ -317,20 +289,38 @@ public class WifiCommunicationService extends Service {
 		}
 		
 		public void actAsServer(Context context) throws IOException {
-			try {
-				InetAddress addr = InetAddress.getByAddress(new byte[] {(byte)192, (byte)168, (byte)43, (byte)1});
-				ServerSocket ss = new ServerSocket(6540, 0, addr);
-				
-				if (listenSocketThread != null && listenSocketThread.isAlive()) listenSocketThread.interrupt();
+			InetAddress addr = getInetAddress();
+			if (addr == null) throw new IllegalArgumentException();
+			GKAParticipant me = new GKAParticipant(0, addr.getHostAddress(), addr.getAddress(), true, GKAParticipantRole.LEADER, 0, 0, null, null);
+			participants.add(me);
+			threads.put(me.getAddress(), null);
+			
+			if (listenSocketThread == null) {
+				ServerSocket ss = new ServerSocket();
+				ss.setReuseAddress(true);
+				ss.bind(new InetSocketAddress(addr, Constants.WIFI_PORT));
+					
 				listenSocketThread = new Thread(new ListenSocketThread(ss));
 				listenSocketThread.start();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
+
 		
-		private class ListenSocketThread implements Runnable {
+		private void registerThread(byte[] address, CommunicationThread thread) {
+			boolean found = false;
+			
+			for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
+				if (Arrays.equals(address, e.getKey())) {
+					e.setValue(thread);
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) threads.put(address, thread);
+		}
+		
+		private class ListenSocketThread extends Thread{
 			
 			private ServerSocket ss;
 			
@@ -340,31 +330,27 @@ public class WifiCommunicationService extends Service {
 			
 			@Override
 			public void run() {
-				InetAddress addr = ss.getInetAddress();
-
-				GKAParticipant me = new GKAParticipant(0, addr.getHostName(), addr.getAddress(), true, GKAParticipantRole.LEADER, 0, 0, null, null);
-					Log.d("added","ko");
-					participants.add(me);
-					threads.put(me.getAddress(), null);
 				
 				while (true) {
 		            try {
 		            	Log.d("waiting for", "connection");
 		                Socket s = ss.accept();
 		                Log.d("connected","ok");
-			            if (s != null) {
+			            if (s != null && participants != null) {
 			            	// invoke communication thread
 			    	        CommunicationThread ct = new CommunicationThread(s);
 			    	        ct.start();
 			    	        
 			    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, s.getInetAddress().getCanonicalHostName(), s.getInetAddress().getAddress(), false, GKAParticipantRole.MEMBER, 0, 0, null, null);
-			    			participants.add(participant);
-			    			threads.put(participant.getAddress(), ct);
-			    			Log.d("participant", participant.toString());
-			    	        
-			    			Intent printDeviceIntent = new Intent(GKAActivity.PRINT_DEVICE);
-			    			printDeviceIntent.putExtra("device", s.getInetAddress().getHostName()+" ("+s.getInetAddress().getHostAddress()+")");
-			    			lbm.sendBroadcast(printDeviceIntent);
+			    	        if (!participants.contains(participant.getAddress())) {
+								participants.add(participant);
+
+								Intent printDeviceIntent = new Intent(GKAActivity.PRINT_DEVICE);
+				    			printDeviceIntent.putExtra("device", s.getInetAddress().getHostName());
+				    			lbm.sendBroadcast(printDeviceIntent);
+							}
+			    	        registerThread(participant.getAddress(), ct);
+			    	
 			    	    }
 		            } catch (IOException e) {
 		            	e.printStackTrace();
@@ -376,10 +362,14 @@ public class WifiCommunicationService extends Service {
 			
 			public void interrupt() {
 				try {
-					if (ss != null) ss.close();
+					if (ss != null) {
+						ss.close();
+						ss = null;
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				super.interrupt();
 			}
 			
 		}
@@ -387,24 +377,44 @@ public class WifiCommunicationService extends Service {
 		public void connectToServer(Context context) {
 			try {
 				Log.d("connect to", "server");
-				InetAddress ia = InetAddress.getByAddress(new byte[] {(byte)192, (byte)168, (byte)43, (byte)1});
-				Socket s = new Socket(ia, 6540);
-				Log.d("connected", "ok");
-		        // invoke communication thread
-		        CommunicationThread ct = new CommunicationThread(s);
-		        ct.start();
-		        GKAParticipant participant = new GKAParticipant(0, ia.getHostName(), ia.getAddress(), false, GKAParticipantRole.LEADER, 0, 0, null, null);
-				participants.add(participant);
-				threads.put(participant.getAddress(), ct);
-		        
-				Log.d("participant",participant.toString());
+				InetAddress myAddr = getInetAddress();
+				if (myAddr == null) throw new SocketException();
 				
-				InetAddress meAddr = InetAddress.getLocalHost();
-				GKAParticipant me = new GKAParticipant(1, "me", meAddr.getAddress(), true, GKAParticipantRole.MEMBER, 0, 0, null, null);
+				Thread connectThread = new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						InetAddress myAddr = getInetAddress();
+						byte[] iaBytes = new byte[]{myAddr.getAddress()[0], myAddr.getAddress()[1], myAddr.getAddress()[2], (byte)1};
+						InetAddress ia;
+						try {
+							ia = InetAddress.getByAddress(iaBytes);
+							
+							Socket s = new Socket(ia, Constants.WIFI_PORT);
+							Log.d("connected", "ok");
+					        // invoke communication thread
+					        CommunicationThread ct = new CommunicationThread(s);
+					        ct.start();
+					        GKAParticipant participant = new GKAParticipant(0, ia.getHostName(), ia.getAddress(), false, GKAParticipantRole.LEADER, 0, 0, null, null);
+							participants.add(participant);
+							threads.put(participant.getAddress(), ct);
+							
+							//Log.d("participant",participant.toString());
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				});
+				connectThread.start();
+		        
+				
+				GKAParticipant me = new GKAParticipant(1, myAddr.getHostAddress()+" (this device)", myAddr.getAddress(), true, GKAParticipantRole.MEMBER, 0, 0, null, null);
 				participants.add(me);
 				threads.put(me.getAddress(), null);
-				
-				Log.d("me", me.toString());
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        }
@@ -420,6 +430,7 @@ public class WifiCommunicationService extends Service {
 			private Socket s;
 		    private InputStream inStream;
 		    private OutputStream outStream;
+		    private boolean isInterrupted = false;
 		 
 		    public CommunicationThread(Socket s) {
 		    	this.s = s;
@@ -449,7 +460,10 @@ public class WifiCommunicationService extends Service {
 		                // Read from the InputStream
 		            	
 		                bytes = inStream.read(buffer);
+		                
 		                Log.d("read", Arrays.toString(buffer));
+		                
+		                if (isInterrupted) break;
 		                PMessage pMessage = null;
 		                if (dividedMessage) {
 		                	concateBytes.write(buffer, 0, bytes);
@@ -458,8 +472,6 @@ public class WifiCommunicationService extends Service {
 		                }
 		                else pMessage = new PMessage(buffer);
 		                
-		                Arrays.fill(buffer, (byte) 0x00);
-		                
 		                Message m = pHandler.obtainMessage();
 		                
 		                Bundle pMessageBundle = new Bundle();
@@ -467,6 +479,8 @@ public class WifiCommunicationService extends Service {
 		                
 		        		m.setData(pMessageBundle);
 		                m.sendToTarget();
+		                
+		                Arrays.fill(buffer, (byte) 0x00);
 		            } catch (IOException e) {
 		                break;
 		            } catch (LengthsNotEqualException e) {
@@ -474,6 +488,16 @@ public class WifiCommunicationService extends Service {
 	            		concateBytes = new ByteArrayOutputStream();
 						concateBytes.write(buffer, 0, bytes);
 						Arrays.fill(buffer, (byte) 0x00);
+					} catch (ArrayIndexOutOfBoundsException e) {
+						onDestroy();
+						Intent getBack = new Intent(getBaseContext(), GKADecisionActivity.class);
+						getBack.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						getBack.setAction(returnKey? Constants.ACTION_GKA_KEY : "empty");
+						getBack.putExtra(Constants.RETRIEVE_KEY, returnKey);
+						getBack.putExtra("getBack", true);
+						getApplication().startActivity(getBack);
+						Log.d("get", "back");
+						break;
 					}
 		        }
 		    }
@@ -492,12 +516,46 @@ public class WifiCommunicationService extends Service {
 		    }
 		 
 		    /* Call this from the main activity to shutdown the connection */
-		    public void cancel() {
+		    public void interrupt() {
+		    	Log.d("one", "1");
 		        try {
+		        	inStream.close();
+		        	Log.d("one", "2");
+		        	outStream.close();
+		        	Log.d("one", "3");
 		            s.close();
+		            Log.d("one", "4");
 		        } catch (IOException e) {
 		        	e.printStackTrace();
 		        }
+		        isInterrupted = true;
+		        super.interrupt();
 		    }
+		}
+		
+		public static boolean isWifiConnected(boolean isLeader) {
+			InetAddress inetAddress = getInetAddress();
+			if (inetAddress != null) {
+               	if (isLeader && inetAddress.getAddress()[3] == (byte)1) return true;
+               	else if (!isLeader && inetAddress.getAddress()[3] != (byte)1) return true;
+               	else return false;
+			}
+	        return false;
+		}
+		
+		public static InetAddress getInetAddress() {
+			try {
+	            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+	                NetworkInterface intf = en.nextElement();
+	                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+	                    InetAddress inetAddress = enumIpAddr.nextElement();
+	                    if (!inetAddress.isLoopbackAddress() && inetAddress.getAddress().length == 4) {
+	                    	return inetAddress;
+	                    }
+	                }
+	            }
+	        } catch (SocketException ex) {
+	        }
+	        return null;
 		}
 }

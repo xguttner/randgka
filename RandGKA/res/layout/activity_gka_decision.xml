@@ -44,24 +44,15 @@
         android:layout_alignParentRight="true"
         android:layout_below="@+id/textView2" />
 
-    <CheckBox
-        android:id="@+id/checkBox1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/spinner2"
-        android:text="@string/fresh_key" />
-
     <Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/checkBox1"
-        android:text="@string/continu" 
-        android:onClick="moveToGKARole"/>
+        android:layout_below="@+id/spinner2"
+        android:onClick="moveToGKARole"
+        android:text="@string/continu" />
 
     <TextView
         android:id="@+id/textView3"

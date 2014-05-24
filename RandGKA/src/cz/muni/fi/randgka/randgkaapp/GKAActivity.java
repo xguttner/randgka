@@ -55,6 +55,9 @@ public class GKAActivity extends Activity {
 			SHOW_RETRIEVE_KEY = "show_retrieve_key",
 			GET_GKA_KEY = "get_gka_key";
 	
+	private BroadcastReceiver br;
+	private LocalBroadcastManager lbm;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -91,6 +94,8 @@ public class GKAActivity extends Activity {
 			nonceLengthTV = (TextView)findViewById(R.id.textView6);
 			groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
 			publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
+			Log.d("created", "even now");
+			Log.d("versionTv", versionTV.toString());
 		}
 		
 		technology = getIntent().getStringExtra("technology");
@@ -109,7 +114,7 @@ public class GKAActivity extends Activity {
 		returnKeyFilter.addAction(GET_PARAMS);
 		returnKeyFilter.addAction(PRINT_DEVICE);
 		
-		BroadcastReceiver rkReceiver = new BroadcastReceiver() {
+		br = new BroadcastReceiver() {
 			
 			private String bytesToHex(byte[] in) {
 			    final StringBuilder builder = new StringBuilder();
@@ -174,8 +179,8 @@ public class GKAActivity extends Activity {
 			}
 		};
 		
-		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
-		lbm.registerReceiver(rkReceiver, returnKeyFilter);
+		lbm = LocalBroadcastManager.getInstance(this);
+		lbm.registerReceiver(br, returnKeyFilter);
 		
 		technology = getIntent().getStringExtra("technology");
 		
@@ -188,7 +193,7 @@ public class GKAActivity extends Activity {
         CameraMES cameraMES = new CameraMES();
         cameraMES.initialize(surface);
         CameraMESHolder.cameraMES = cameraMES;
- 
+        
 	}
 
 	@Override
@@ -198,14 +203,17 @@ public class GKAActivity extends Activity {
 	}
 	
 	@Override
-	protected void onStop() {
-		super.onStop();
-		clean();
+	protected void onStart() {
+		super.onStart();
+
+        Intent setSecureRandom = new Intent(this, technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.class : BluetoothCommunicationService.class);
+        setSecureRandom.setAction(technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.SET_SECURE_RANDOM : BluetoothCommunicationService.SET_SECURE_RANDOM);
+        startService(setSecureRandom);
 	}
 	
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+	protected void onStop() {
+		super.onStop();
 		clean();
 	}
 	
@@ -223,12 +231,19 @@ public class GKAActivity extends Activity {
 			stopService.setAction(WifiCommunicationService.STOP);
 			startService(stopService);
 		}
+		if (br != null) lbm.unregisterReceiver(br);
 	}
 
 	public void retrieveKey(View view) {
+		
 		Intent result = new Intent();       
 		result.putExtra(Constants.KEY, key);
-		GKAActivity.this.setResult(Activity.RESULT_OK, result);
+		result.putExtra("getBack", true);
+		if (getParent() == null) {
+		    setResult(Activity.RESULT_OK, result);
+		} else {
+		    getParent().setResult(Activity.RESULT_OK, result);
+		}
 		finish();
 	}
 	

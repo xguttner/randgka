@@ -202,6 +202,7 @@ public class PMessage implements Serializable {
 	}
 
 	public void fromBytes(byte[] pMessageInBytes2) throws LengthsNotEqualException {
+		if (pMessageInBytes2 != null) {
 		byte[] pMessageInBytes = Base64.decode(pMessageInBytes2, Base64.DEFAULT);
 		roundNo = pMessageInBytes[0];
 		if (pMessageInBytes.length  > 740) {
@@ -240,7 +241,7 @@ public class PMessage implements Serializable {
 			signature = new byte[sigLength];
 			System.arraycopy(pMessageInBytes, length+14, signature, 0, sigLength);
 		}
-		
+		}
 	}
 	
 	public void selfSign(PrivateKey privateKey, byte[] nonces, SecureRandom secureRandom, int signLength) {
