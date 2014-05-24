@@ -72,4 +72,6 @@
 	<string name="output_length">Output length (bits)</string>
 	<string name="key_length">Key length</string>
 	<string name="random_source">Randomness source</string>
+	<string name="wifi_connection_warning">Device is not interconnected. Connect it using tethering with other devices.</string>
+	<string name="wifi_leader_connection_warning">Device has to be set as a hotspot.</string>
 </resources>

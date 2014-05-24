@@ -27,6 +27,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import android.os.Message;
+import android.util.Log;
 import cz.muni.fi.randgka.tools.PMessage;
 
 public class AugotGKA implements GKAProtocol {
@@ -109,6 +111,8 @@ public class AugotGKA implements GKAProtocol {
 
 			PMessage response = preCreateMessage(message);
 			GKAProtocolRound round = null;
+			
+			Log.d("round",message.getRoundNo()+"");
 			
 			switch (message.getRoundNo()) {
 
@@ -240,7 +244,7 @@ public class AugotGKA implements GKAProtocol {
 
 	private GKAProtocolRound r1s(PMessage message, PMessage response) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		GKAProtocolRound round = new GKAProtocolRound();
-
+		Log.d("id", participants.toString()+message.getOriginatorId());
 		if (!receivedParts.contains(message.getOriginatorId())) {
 			receivedParts.add(message.getOriginatorId());
 
@@ -264,6 +268,7 @@ public class AugotGKA implements GKAProtocol {
 		if (receivedParts.size() == participants.size() - 1) {
 			byte[] newMessage = participants.getTransferObject();
 			response.setLength(newMessage.length);
+			Log.d("length", newMessage.length+"");
 			response.setMessage(newMessage);
 			round.put(participants.getAllButMe(), response);
 
@@ -306,7 +311,6 @@ public class AugotGKA implements GKAProtocol {
 			BigInteger compoundPublic = receivedPublic.modPow(secret, p);
 			key = key.multiply(compoundPublic).mod(p);
 
-			originator.setDHPublicKey(receivedPublic);
 			participants.merge(originator);
 
 			byte[] originatorIdArray = ByteBuffer.allocate(4).putInt(message.getOriginatorId()).array();
@@ -372,14 +376,12 @@ public class AugotGKA implements GKAProtocol {
 			System.arraycopy(message.getMessage(), offset + 4, currentKeyArray, 0, gkaProtocolParams.getGroupKeyLength());
 			System.arraycopy(message.getMessage(), offset + 4 + gkaProtocolParams.getGroupKeyLength(), currentCompoundKeyArray, 0, gkaProtocolParams.getGroupKeyLength());
 
-			originator.setDHPublicKey(new BigInteger(1, currentKeyArray));
 			participants.merge(originator);
 
-			BigInteger compoundPublic = new BigInteger(1,
-					currentCompoundKeyArray);
+			BigInteger compoundPublic = new BigInteger(1, currentCompoundKeyArray);
 			compoundPublic = compoundPublic.mod(p);
 			key = key.multiply(compoundPublic).mod(p);
-			if (originator.equals(participants.getMe())) key = key.multiply(compoundPublic.modPow(secretInverse, p)).mod(p);
+			if (originator != null && originator.equals(participants.getMe())) key = key.multiply(compoundPublic.modPow(secretInverse, p)).mod(p);
 
 			offset += 4+2*gkaProtocolParams.getGroupKeyLength();
 		}
@@ -418,10 +420,10 @@ public class AugotGKA implements GKAProtocol {
 	private GKAProtocolRound r0s(PMessage response) throws IOException {
 		GKAProtocolRound round = new GKAProtocolRound();
 
-		byte[] intBytes;
-		ByteArrayOutputStream bs = new ByteArrayOutputStream();
-
+		byte[] intBytes = new byte[4];
+		
 		for (GKAParticipant p : participants.getAllButMe().getParticipants()) {
+			ByteArrayOutputStream bs = new ByteArrayOutputStream();
 			intBytes = ByteBuffer.allocate(4).putInt(p.getId()).array();
 			bs.write(intBytes);
 			intBytes = ByteBuffer.allocate(4).putInt(gkaProtocolParams.getVersion()).array();
@@ -433,18 +435,16 @@ public class AugotGKA implements GKAProtocol {
 			intBytes = ByteBuffer.allocate(4).putInt(gkaProtocolParams.getPublicKeyLength()).array();
 			bs.write(intBytes);
 
-			response.setMessage(bs.toByteArray());
-			response.setLength(bs.size());
+			PMessage responseNew = new PMessage(response.getRoundNo(), response.getOriginatorId(), 0, 0, false, null, null);
+			responseNew.setMessage(bs.toByteArray());
+			responseNew.setLength(bs.size());
 
-			round.put(p, response);
+			round.put(p, responseNew);
 		}
 		return round;
 	}
 	
 	private void clear() {
-		for (GKAParticipant p : participants.getParticipants()) {
-			p.setDHPublicKey(null);
-		}
 		
 		failFlag = false;
 		

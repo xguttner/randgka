@@ -1,5 +1,6 @@
 package cz.muni.fi.randgka.tools;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
@@ -36,7 +37,7 @@ public class PMessage implements Serializable {
 		signed = false;
 	}
 	
-	public PMessage(byte[] pMessageInBytes) {
+	public PMessage(byte[] pMessageInBytes) throws LengthsNotEqualException {
 		signed = false;
 		fromBytes(pMessageInBytes);
 	}
@@ -200,10 +201,23 @@ public class PMessage implements Serializable {
 		return length + STATIC_LENGTH + (signed?sigLength:0);
 	}
 
-	public void fromBytes(byte[] pMessageInBytes) {
-		pMessageInBytes = Base64.decode(pMessageInBytes, Base64.DEFAULT);
+	public void fromBytes(byte[] pMessageInBytes2) throws LengthsNotEqualException {
+		byte[] pMessageInBytes = Base64.decode(pMessageInBytes2, Base64.DEFAULT);
 		roundNo = pMessageInBytes[0];
-		
+		if (pMessageInBytes.length  > 740) {
+			ByteArrayOutputStream bs = new ByteArrayOutputStream();
+			String s = "";
+			for (int i = 700; i < pMessageInBytes.length; i++) {
+				s += ", "+pMessageInBytes[i];
+			}
+
+			Log.d("pMessageInBytes", s);
+			s = "";
+			for (int i = 700; i < pMessageInBytes2.length; i++) {
+				s += ", "+pMessageInBytes2[i];
+			}
+			Log.d("pMessageInBytes2", s);
+		}
 		byte[] originatorIdBytes = new byte[4];
 		System.arraycopy(pMessageInBytes, 1, originatorIdBytes, 0, 4);
 		originatorId = ByteBuffer.wrap(originatorIdBytes).getInt();
@@ -218,6 +232,7 @@ public class PMessage implements Serializable {
 		
 		signed = (pMessageInBytes[13] == (byte)1)?true:false;
 		
+		if (pMessageInBytes.length-13 < length) throw new LengthsNotEqualException();
 		message = new byte[length];
 		System.arraycopy(pMessageInBytes, 14, message, 0, length);
 		

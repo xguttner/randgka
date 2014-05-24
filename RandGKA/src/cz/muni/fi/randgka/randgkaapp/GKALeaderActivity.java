@@ -1,11 +1,13 @@
 package cz.muni.fi.randgka.randgkaapp;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.wifigka.WifiCommunicationService;
 import cz.muni.fi.randgkaapp.R;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pManager.Channel;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.annotation.TargetApi;
@@ -15,6 +17,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -32,8 +35,6 @@ public class GKALeaderActivity extends Activity {
 	private Spinner nonceLengthsSpinner,
 		groupKeyLengthsSpinner,
 		publicKeyLengthsSpinner;
-	
-	private BroadcastReceiver br;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,24 +64,30 @@ public class GKALeaderActivity extends Activity {
 		freshKey = getIntent().getBooleanExtra("freshKey", false);
 		technology = getIntent().getStringExtra("technology");
 		if (technology.equals(Constants.WIFI_GKA)) {
-			IntentFilter intentFilter = new IntentFilter();
-		    intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-		    
-		    WifiP2pManager wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-		    Channel wifiChannel = wifiP2pManager.initialize(this, getMainLooper(), null);
-		    
-		    br = new BroadcastReceiver() {
-				@Override
-				public void onReceive(Context context, Intent intent) {
-					if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(intent.getAction())) {
-			            int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-			            if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-			                wifiEnabled = true;
-			            }
-			        }
-				}
-			};
-		    registerReceiver(br, intentFilter);
+			
+			WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+			try {
+				Method m = wifiManager.getClass().getMethod("getWifiApState");
+				int tmp = (Integer) m.invoke(wifiManager);
+				
+				if (tmp > 10) {
+		            tmp = tmp - 10;
+		        }
+		        Log.d("tmp", tmp+" ");
+		        wifiEnabled = true;
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		} else if (technology.equals(Constants.BLUETOOTH_GKA)) {
 			bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		}
@@ -143,7 +150,6 @@ public class GKALeaderActivity extends Activity {
 		commServiceIntent.putExtra("publicKeyLength", publicKeyLength);
 		commServiceIntent.putExtra("version", authRadio.isChecked()?1:(authConfRadio.isChecked()?2:0));
 		commServiceIntent.putExtra("freshKey", freshKey);
-		commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
 		
 		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
 		if (technology.equals(Constants.BLUETOOTH_GKA)) {
@@ -151,12 +157,16 @@ public class GKALeaderActivity extends Activity {
 			
 			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), Constants.REQUEST_DISCOVERABLE_BT);
 			
+			commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
 			commServiceIntent.setClass(this, BluetoothCommunicationService.class);
 			startService(commServiceIntent);
 		} 
 		else if (technology.equals(Constants.WIFI_GKA)) {
 			if (wifiEnabled) {
+				Log.d("right", "way");
+				commServiceIntent.setAction(WifiCommunicationService.LEADER_RUN);
 				commServiceIntent.setClass(this, WifiCommunicationService.class);
+				startService(commServiceIntent);
 				
 				moveToGKAActivity();
 			}

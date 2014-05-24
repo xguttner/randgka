@@ -1,5 +1,6 @@
 package cz.muni.fi.randgka.bluetoothgka;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,12 +19,14 @@ import java.util.UUID;
 import cz.muni.fi.randgka.gka.AugotGKA;
 import cz.muni.fi.randgka.gka.GKAParticipant;
 import cz.muni.fi.randgka.gka.GKAParticipantRole;
+import cz.muni.fi.randgka.gka.GKAParticipants;
 import cz.muni.fi.randgka.gka.GKAProtocol;
 import cz.muni.fi.randgka.gka.GKAProtocolParams;
 import cz.muni.fi.randgka.gka.GKAProtocolRound;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.randgkaapp.GKAActivity;
 import cz.muni.fi.randgka.tools.Constants;
+import cz.muni.fi.randgka.tools.LengthsNotEqualException;
 import cz.muni.fi.randgka.tools.PMessage;
 import cz.muni.fi.randgka.tools.LongTermKeyProvider;
 import android.app.Service;
@@ -51,9 +54,10 @@ public class BluetoothCommunicationService extends Service {
 								GKA_RUN = "GKA_RUN";
 	
 	private static final String MODP_GROUP_FILE = "modpgroups.xml";
+	public static final String STOP = "STOP";
 	
-	private BluetoothGKAParticipants participants;
-	private Map<String, CommunicationThread> threads;
+	private GKAParticipants participants;
+	private Map<byte[], CommunicationThread> threads;
 	private PMessageHandler pHandler;
 	private GKAProtocol protocol;
 	private LongTermKeyProvider longTermKeyProvider;
@@ -70,32 +74,17 @@ public class BluetoothCommunicationService extends Service {
 	
 	@Override
 	public void onCreate() {
-		try {
-			init();
-			
-			context = this.getBaseContext();
-			lbm = LocalBroadcastManager.getInstance(this);
-			longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (NoSuchProviderException e) {
-			e.printStackTrace();
-		}
 	}
 	
-	private void init() throws NoSuchAlgorithmException, NoSuchProviderException {
-		init(null);
-	}
-	
-	private void init(Intent intent) throws NoSuchAlgorithmException, NoSuchProviderException {
+	private void initialize() {
 		returnKey = false;
-		participants = new BluetoothGKAParticipants();
+		participants = new GKAParticipants();
 		if (threads != null) {
-			for (Entry<String, CommunicationThread> e : threads.entrySet()) {
+			for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
 				if (e.getValue() != null) e.getValue().cancel();
 			}
 		}
-		threads = new HashMap<String, CommunicationThread>();
+		threads = new HashMap<byte[], CommunicationThread>();
 		newParticipantId = 0;
 		pHandler = new PMessageHandler();
 		
@@ -107,16 +96,24 @@ public class BluetoothCommunicationService extends Service {
 		/*} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}*/
-		
-		if (intent != null) {
-			version = intent.getIntExtra("version", GKAProtocolParams.NON_AUTH);
-			nonceLength = intent.getIntExtra("nonceLength", 0)/8;
-			groupKeyLength = intent.getIntExtra("groupKeyLength", 0)/8;
-			publicKeyLength = intent.getIntExtra("publicKeyLength", 0)/8;
 			
-			returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
-			if (intent.getBooleanExtra("freshKey", false)) longTermKeyProvider.generateKeys(publicKeyLength*8);
-		}
+		context = this.getBaseContext();
+		lbm = LocalBroadcastManager.getInstance(this);
+		longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+	}
+	
+	private void initRun(Intent intent) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+		version = intent.getIntExtra("version", GKAProtocolParams.NON_AUTH);
+		nonceLength = intent.getIntExtra("nonceLength", 0)/8;
+		groupKeyLength = intent.getIntExtra("groupKeyLength", 0)/8;
+		publicKeyLength = intent.getIntExtra("publicKeyLength", 0)/8;
+		
+		returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
+		if (intent.getBooleanExtra("freshKey", false)) longTermKeyProvider.generateKeys(publicKeyLength*8);
+		
+		participants.initialize(nonceLength, publicKeyLength);
+		Log.d("pklen", publicKeyLength+ " ");
+		participants.getMe().setAuthPublicKey(longTermKeyProvider.getPublicKey(publicKeyLength*8));
 	}
 	
 	@Override
@@ -125,27 +122,32 @@ public class BluetoothCommunicationService extends Service {
 			String action = intent.getAction();
 			
 			if (action.equals(LEADER_RUN)) {
-				init(intent);
+				initialize();
 				actAsServer(this, BluetoothAdapter.getDefaultAdapter());
 			} 
 			else if (action.equals(MEMBER_RUN)) {
-				init(intent);
+				initialize();
+				returnKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
 				connectToServer((BluetoothDevice)intent.getParcelableExtra("bluetoothDevice"), this);
 			} 
 			else if (action.equals(GKA_RUN)) {
+				initRun(intent);
 				if (listenSocketThread != null) listenSocketThread.interrupt();
-				if (!protocol.isInitialized()) {
-					AssetManager am = getAssets();
-					InputStream modpGroupIS = am.open(MODP_GROUP_FILE);
-					
-					GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, modpGroupIS, longTermKeyProvider.getPrivateKey(publicKeyLength*8));
-					protocol.init(participants, secureRandom, params);
-				}
+				
+				AssetManager am = getAssets();
+				InputStream modpGroupIS = am.open(MODP_GROUP_FILE);
+				
+				GKAProtocolParams params = new GKAProtocolParams(version, nonceLength, groupKeyLength, publicKeyLength, modpGroupIS, longTermKeyProvider.getPrivateKey(publicKeyLength*8));
+				protocol.init(participants, secureRandom, params);
+
 				GKAProtocolRound firstRound = protocol.nextRound(new PMessage((byte)0, 0, 0, 0, false, null, null));
 				sendRound(firstRound);
 			}
 			else if (action.equals(GKAActivity.GET_PARAMS)) {
 				printParams();
+			}
+			else if (action.equals(STOP)) {
+				this.onDestroy();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -181,7 +183,7 @@ public class BluetoothCommunicationService extends Service {
 			}
 			if (pr.getMessages() != null && threads != null) {
 				for (Entry<GKAParticipant, PMessage> e : pr.getMessages().entrySet()) {
-					String address = participants.getBluetoothFeaturesFor(e.getKey().getId()).getMacAddress();
+					byte[] address = participants.getParticipant(e.getKey().getId()).getAddress();
 					threads.get(address).write(e.getValue().getBytes());
 				}
 			}
@@ -189,13 +191,21 @@ public class BluetoothCommunicationService extends Service {
 	}
 	
 	private void printKey() {
-		Intent printKeyIntent = new Intent(Constants.GET_GKA_KEY);
+		Intent printKeyIntent = new Intent(GKAActivity.GET_GKA_KEY);
+		Log.d("key",protocol.getKey().toByteArray()+"");
 	    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
 	    lbm.sendBroadcast(printKeyIntent);
 	}
 	
 	@Override
 	public void onDestroy() {
+		super.onDestroy();
+		if (threads != null) {
+			for (Entry<byte[], CommunicationThread> e : threads.entrySet()) {
+				if (e.getValue() != null) e.getValue().cancel();
+			}
+		}
+		pHandler.removeCallbacksAndMessages(null);
 		pHandler = null;
 		participants = null;
 		if (listenSocketThread != null) listenSocketThread.interrupt();
@@ -238,7 +248,6 @@ public class BluetoothCommunicationService extends Service {
 							me.setAuthPublicKey(longTermKeyProvider.getPublicKey(publicKeyLength*8));
 							
 							for (GKAParticipant p : participants.getParticipants()) {
-								p.setDhLen(groupKeyLength);
 								p.setNonceLen(nonceLength);
 								p.setPkLen(publicKeyLength);
 							}
@@ -266,11 +275,10 @@ public class BluetoothCommunicationService extends Service {
 	
 	public void actAsServer(Context context, BluetoothAdapter bluetoothAdapter) throws IOException {
 		try {
-			GKAParticipant me = new GKAParticipant(0, bluetoothAdapter.getName()+" ("+ bluetoothAdapter.getAddress()+")", true, GKAParticipantRole.LEADER, nonceLength, groupKeyLength, 
-					publicKeyLength, null, null, longTermKeyProvider.getPublicKey(publicKeyLength*8));
-			BluetoothFeatures bf = new BluetoothFeatures(bluetoothAdapter.getAddress(), bluetoothAdapter.getName());
-			participants.add(me, bf);
-			threads.put(bf.getMacAddress(), null);
+			GKAParticipant me = new GKAParticipant(0, bluetoothAdapter.getName(), GKAParticipant.macStringToBytes(bluetoothAdapter.getAddress()), true, 
+					GKAParticipantRole.LEADER, 0, 0, null, null);
+			participants.add(me);
+			threads.put(me.getAddress(), null);
 			
 			BluetoothServerSocket bss = bluetoothAdapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, GKA_UUID);
 			
@@ -280,13 +288,7 @@ public class BluetoothCommunicationService extends Service {
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (NoSuchProviderException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		}
+		} 
 	}
 	
 	private class ListenSocketThread implements Runnable {
@@ -307,13 +309,12 @@ public class BluetoothCommunicationService extends Service {
 		    	        CommunicationThread ct = new CommunicationThread(bs);
 		    	        ct.start();
 		    	        
-		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, bs.getRemoteDevice().getName()+" ("+ bs.getRemoteDevice().getAddress()+")", false, GKAParticipantRole.MEMBER, nonceLength, groupKeyLength, publicKeyLength, null, null, null);
-		    			BluetoothFeatures bf = new BluetoothFeatures(bs.getRemoteDevice().getAddress(), bs.getRemoteDevice().getName());
-		    			participants.add(participant, bf);
-		    			threads.put(bf.getMacAddress(), ct);
+		    	        GKAParticipant participant = new GKAParticipant(++newParticipantId, bs.getRemoteDevice().getName(), GKAParticipant.macStringToBytes(bs.getRemoteDevice().getAddress()), false, GKAParticipantRole.MEMBER, 0, 0, null, null);
+		    			participants.add(participant);
+		    			threads.put(participant.getAddress(), ct);
 		    	        
 		    			Intent printDeviceIntent = new Intent(GKAActivity.PRINT_DEVICE);
-		    			printDeviceIntent.putExtra("device", bf.getName()+" ("+bf.getMacAddress()+")");
+		    			printDeviceIntent.putExtra("device", bs.getRemoteDevice().getName()+" ("+bs.getRemoteDevice().getAddress()+")");
 		    			lbm.sendBroadcast(printDeviceIntent);
 		    	    }
 	            } catch (IOException e) {
@@ -342,15 +343,13 @@ public class BluetoothCommunicationService extends Service {
 	        // invoke communication thread
 	        CommunicationThread ct = new CommunicationThread(bs);
 	        ct.start();
-	        GKAParticipant participant = new GKAParticipant(0, bluetoothDevice.getName()+" ("+ bluetoothDevice.getAddress()+")", false, GKAParticipantRole.LEADER, nonceLength, groupKeyLength, publicKeyLength, null, null, null);
-			BluetoothFeatures bf = new BluetoothFeatures(bluetoothDevice.getAddress(), bluetoothDevice.getName());
-			participants.add(participant, bf);
-			threads.put(bf.getMacAddress(), ct);
+	        GKAParticipant participant = new GKAParticipant(0, bluetoothDevice.getName(), GKAParticipant.macStringToBytes(bluetoothDevice.getAddress()), false, GKAParticipantRole.LEADER, 0, 0, null, null);
+			participants.add(participant);
+			threads.put(participant.getAddress(), ct);
 	        
-			GKAParticipant me = new GKAParticipant(1, BluetoothAdapter.getDefaultAdapter().getName()+" ("+ BluetoothAdapter.getDefaultAdapter().getAddress()+")", true, GKAParticipantRole.MEMBER, nonceLength, groupKeyLength, publicKeyLength, null, null, null);
-			BluetoothFeatures myBf = new BluetoothFeatures(BluetoothAdapter.getDefaultAdapter().getAddress(), BluetoothAdapter.getDefaultAdapter().getName());
-			participants.add(me, myBf);
-			threads.put(myBf.getMacAddress(), null);
+			GKAParticipant me = new GKAParticipant(1, BluetoothAdapter.getDefaultAdapter().getName(), GKAParticipant.macStringToBytes(BluetoothAdapter.getDefaultAdapter().getAddress()), true, GKAParticipantRole.MEMBER, 0, 0, null, null);
+			participants.add(me);
+			threads.put(me.getAddress(), null);
 			
         } catch (IOException e) {
         	e.printStackTrace();
@@ -385,15 +384,26 @@ public class BluetoothCommunicationService extends Service {
 	    }
 	 
 	    public void run() {
-	        byte[] buffer = new byte[2048];  // buffer store for the stream
-	        int bytes; // bytes returned from read()
-	        
+	    	//byte[] buffer = new byte[2048];  // buffer store for the stream
+	        int bytes = 0; // bytes returned from read()
+	        byte[] buffer = new byte[2048];
+	       	ByteArrayOutputStream concateBytes = null;
+	       	boolean dividedMessage = false;
 	        // Keep listening to the InputStream until an exception occurs
 	        while (true) {
 	            try {
 	                // Read from the InputStream
+	            	
 	                bytes = inStream.read(buffer);
-	                PMessage pMessage = new PMessage(buffer);
+	                Log.d("read", Arrays.toString(buffer));
+	                PMessage pMessage = null;
+	                if (dividedMessage) {
+	                	concateBytes.write(buffer, 0, bytes);
+	                	pMessage = new PMessage(concateBytes.toByteArray());
+	                	dividedMessage = false;
+	                }
+	                else pMessage = new PMessage(buffer);
+	                
 	                Arrays.fill(buffer, (byte) 0x00);
 	                
 	                Message m = pHandler.obtainMessage();
@@ -405,14 +415,23 @@ public class BluetoothCommunicationService extends Service {
 	                m.sendToTarget();
 	            } catch (IOException e) {
 	                break;
-	            }
+	            } catch (LengthsNotEqualException e) {
+	            	dividedMessage = true;
+            		concateBytes = new ByteArrayOutputStream();
+					concateBytes.write(buffer, 0, bytes);
+					Arrays.fill(buffer, (byte) 0x00);
+				}
 	        }
 	    }
 	    
 	    /* Call this from the main activity to send data to the remote device */
 	    public void write(byte[] bytes) {
 	        try {
+	        	//Log.d("write", Arrays.toString(bytes));
 	            outStream.write(bytes);
+	            // Log.d("writeLength", bytes.length+" ");
+	            //PMessage forSure = new PMessage(bytes);
+	            //Log.d("forSure", forSure.getLength()+" ");
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        }

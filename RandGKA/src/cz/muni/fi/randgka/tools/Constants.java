@@ -45,7 +45,7 @@ public final class Constants {
 	
 	public static final String BLUETOOTH_GKA = "Bluetooth";
 	
-	public static final String WIFI_GKA = "Wi-Fi Direct";
+	public static final String WIFI_GKA = "Wi-Fi";
 
 	public static final String SHOW_RETRIEVE_KEY = "cz.muni.fi.androidrandextr.SHOW_RETRIEVE_KEY";
 

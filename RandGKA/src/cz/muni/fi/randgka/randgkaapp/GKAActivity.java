@@ -3,14 +3,15 @@ package cz.muni.fi.randgka.randgkaapp;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
-import cz.muni.fi.randgka.bluetoothgka.BluetoothFeatures;
-import cz.muni.fi.randgka.bluetoothgka.BluetoothGKAParticipants;
 import cz.muni.fi.randgka.gka.GKAParticipant;
+import cz.muni.fi.randgka.gka.GKAParticipants;
 import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.tools.Constants;
+import cz.muni.fi.randgka.wifigka.WifiCommunicationService;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
@@ -19,26 +20,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 public class GKAActivity extends Activity {
 
-	private boolean isLeader = false;
 	private Button retrieveButton;
 	private byte[] key;
 	private String technology;
 	
+	private Spinner nonceLengthsSpinner,
+	groupKeyLengthsSpinner,
+	publicKeyLengthsSpinner;
+	
 	private TextView protocolParticipantsTV,
+		gkaTV,
 		versionTV,
-		nonceLengthTV,
 		groupKeyLengthTV,
 		publicKeyLengthTV,
-		gkaTV;
+		nonceLengthTV;
 	
 	public static final String GET_PARTICIPANTS = "get_participants",
 			GET_PARAMS = "get_params",
@@ -50,15 +58,46 @@ public class GKAActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_gkaprotocol);
+		
+		if (this.getIntent().getBooleanExtra("isLeader", false)) {
+			setContentView(R.layout.activity_gkaprotocol);
+			
+			ArrayAdapter<Integer> nonceLengths = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item);
+			nonceLengths.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			nonceLengths.add(32);
+			nonceLengths.add(64);
+			nonceLengths.add(128);
+			nonceLengthsSpinner = (Spinner)findViewById(R.id.spinner2);
+			nonceLengthsSpinner.setAdapter(nonceLengths);
+			
+			ArrayAdapter<Integer> groupKeyLengths = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item);
+			groupKeyLengths.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			groupKeyLengths.add(1024);
+			groupKeyLengths.add(2048);
+			groupKeyLengthsSpinner = (Spinner)findViewById(R.id.spinner3);
+			groupKeyLengthsSpinner.setAdapter(groupKeyLengths);
+			
+			ArrayAdapter<CharSequence> publicKeyLengths = ArrayAdapter.createFromResource(this, R.array.pkLengths, android.R.layout.simple_spinner_item);
+			publicKeyLengths.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			publicKeyLengthsSpinner = (Spinner)findViewById(R.id.spinner4);
+			publicKeyLengthsSpinner.setAdapter(publicKeyLengths);
+			
+			Button runButton = (Button)findViewById(R.id.button1);
+			runButton.setClickable(true);
+		}
+		else {
+			setContentView(R.layout.activity_gkaprotocol2);
+			versionTV = (TextView)findViewById(R.id.textView5);
+			nonceLengthTV = (TextView)findViewById(R.id.textView6);
+			groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
+			publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
+		}
+		
+		technology = getIntent().getStringExtra("technology");
 		
 		retrieveButton = (Button)findViewById(R.id.button2);
 		retrieveButton.setVisibility(View.GONE);
 		
-		versionTV = (TextView)findViewById(R.id.textView15);
-		nonceLengthTV = (TextView)findViewById(R.id.textView5);
-		groupKeyLengthTV = (TextView)findViewById(R.id.textView8);
-		publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
 		protocolParticipantsTV = (TextView)findViewById(R.id.textView13);
 		gkaTV = (TextView)findViewById(R.id.textView11);		
 		
@@ -89,14 +128,12 @@ public class GKAActivity extends Activity {
 				} 
 				else if (intent.getAction().equals(GET_PARTICIPANTS)) {
 					protocolParticipantsTV.setText("");
-					BluetoothGKAParticipants gkaParticipants = (BluetoothGKAParticipants)intent.getSerializableExtra("participants");
+					GKAParticipants gkaParticipants = (GKAParticipants)intent.getSerializableExtra("participants");
 
 					if (gkaParticipants != null) {
-						BluetoothFeatures bf = null;
 						
 						for (GKAParticipant g : gkaParticipants.getParticipants()) {
-							bf = gkaParticipants.getBluetoothFeaturesFor(g.getId());
-							protocolParticipantsTV.append(""+bf.getName()+" ("+bf.getMacAddress()+")");
+							protocolParticipantsTV.append(g.getName());
 							if (g.getAuthPublicKey()!=null) {
 								try {
 									MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -122,10 +159,12 @@ public class GKAActivity extends Activity {
 					publicKeyLengthTV.setText(publicKeyLength);
 					
 				} 
-				else if (intent.getAction().equals(Constants.GET_GKA_KEY)) {
+				else if (intent.getAction().equals(GET_GKA_KEY)) {
 					if (gkaTV != null) {
 						gkaTV.setText("");
+						
 						key = intent.getByteArrayExtra(Constants.KEY);
+						Log.d("key","gkaact"+Arrays.toString(key));
 						gkaTV.append((new BigInteger(key)).toString(16));
 					}
 				} 
@@ -138,21 +177,7 @@ public class GKAActivity extends Activity {
 		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
 		lbm.registerReceiver(rkReceiver, returnKeyFilter);
 		
-		Button runButton = (Button)findViewById(R.id.button1);
-		
 		technology = getIntent().getStringExtra("technology");
-		
-		if (this.getIntent().getBooleanExtra("isLeader", false)) {
-			isLeader = true;
-			
-			Intent paramsIntent = new Intent(this, BluetoothCommunicationService.class);
-			paramsIntent.setAction(GET_PARAMS);
-			startService(paramsIntent);
-			
-		} else {
-			runButton.setVisibility(View.GONE);
-		}
-		runButton.setClickable(isLeader);
 		
 		SurfaceView surface = null;
 		
@@ -163,6 +188,7 @@ public class GKAActivity extends Activity {
         CameraMES cameraMES = new CameraMES();
         cameraMES.initialize(surface);
         CameraMESHolder.cameraMES = cameraMES;
+ 
 	}
 
 	@Override
@@ -174,18 +200,28 @@ public class GKAActivity extends Activity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		if (CameraMESHolder.cameraMES != null) {
-			CameraMESHolder.cameraMES.stop();
-			CameraMESHolder.cameraMES = null;
-		}
+		clean();
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		clean();
+	}
+	
+	private void clean() {
 		if (CameraMESHolder.cameraMES != null) {
 			CameraMESHolder.cameraMES.stop();
 			CameraMESHolder.cameraMES = null;
+		}
+		if (technology.equals(Constants.BLUETOOTH_GKA)) {
+			Intent stopService = new Intent(this, BluetoothCommunicationService.class);
+			stopService.setAction(BluetoothCommunicationService.STOP);
+			startService(stopService);
+		} else if (technology.equals(Constants.WIFI_GKA)) {
+			Intent stopService = new Intent(this, WifiCommunicationService.class);
+			stopService.setAction(WifiCommunicationService.STOP);
+			startService(stopService);
 		}
 	}
 
@@ -197,12 +233,27 @@ public class GKAActivity extends Activity {
 	}
 	
 	public void runProtocol(View view) {
+		Integer nonceLength = (Integer)nonceLengthsSpinner.getSelectedItem();
+		Integer groupKeyLength = (Integer)groupKeyLengthsSpinner.getSelectedItem();
+		Integer publicKeyLength = Integer.parseInt(String.valueOf((CharSequence) publicKeyLengthsSpinner.getSelectedItem()));
+		RadioButton authRadio = (RadioButton)findViewById(R.id.radio1);
+		RadioButton authConfRadio = (RadioButton)findViewById(R.id.radio2);
+		
+		Intent commServiceIntent = new Intent();
+		commServiceIntent.putExtra("nonceLength", nonceLength);
+		commServiceIntent.putExtra("groupKeyLength", groupKeyLength);
+		commServiceIntent.putExtra("publicKeyLength", publicKeyLength);
+		commServiceIntent.putExtra("version", authRadio.isChecked()?1:(authConfRadio.isChecked()?2:0));
+		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
+		
 		if (technology.equals(Constants.WIFI_GKA)) {
-			
+			commServiceIntent.setClass(this, WifiCommunicationService.class);
+			commServiceIntent.setAction(WifiCommunicationService.GKA_RUN);
+			startService(commServiceIntent);
 		} else if (technology.equals(Constants.BLUETOOTH_GKA)) {
-			Intent runProtocolIntent = new Intent(this, BluetoothCommunicationService.class);
-			runProtocolIntent.setAction(BluetoothCommunicationService.GKA_RUN);
-			startService(runProtocolIntent);
+			commServiceIntent.setClass(this, BluetoothCommunicationService.class);
+			commServiceIntent.setAction(BluetoothCommunicationService.GKA_RUN);
+			startService(commServiceIntent);
 		}
 	}
 }

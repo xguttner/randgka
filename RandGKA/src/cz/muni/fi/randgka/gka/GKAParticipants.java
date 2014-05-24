@@ -2,16 +2,20 @@ package cz.muni.fi.randgka.gka;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
 
 import android.util.Log;
 
-public class GKAParticipants {
+public class GKAParticipants implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3730203057969772914L;
 	protected List<GKAParticipant> participants;
 	
 	public GKAParticipants() {
@@ -53,14 +57,15 @@ public class GKAParticipants {
 	
 	public void merge(GKAParticipant toMerge) {
 		boolean contains = false;
-		for (GKAParticipant p : participants) {
-			if (p.equals(toMerge)) {
-				//if (toMerge.getDHPublicKey() != null) p.setDHPublicKey(toMerge.getDHPublicKey());
-				if (toMerge.getAuthPublicKey() != null) p.setAuthPublicKey(toMerge.getAuthPublicKey());
-				contains = true;
+		if (toMerge != null) {
+			for (GKAParticipant p : participants) {
+				if (p.equals(toMerge)) {
+					if (toMerge.getAuthPublicKey() != null) p.setAuthPublicKey(toMerge.getAuthPublicKey());
+					contains = true;
+				}
 			}
+			if (!contains) add(toMerge);
 		}
-		if (!contains) add(toMerge);
 	}
 	
 	public GKAParticipant getMe() {
@@ -127,7 +132,7 @@ public class GKAParticipants {
 	public byte[] getTransferObject() {
 		try {
 			ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-			bStream.write(participants.size());
+			bStream.write((byte)participants.size());
 			for (GKAParticipant p : participants) {
 					bStream.write(p.getTransferObject());
 			}
@@ -164,6 +169,15 @@ public class GKAParticipants {
 			 
 			offset += p.getTOLength();
 			i++;
+		}
+	}
+
+	public void initialize(Integer nonceLength, Integer publicKeyLength) {
+		if (participants != null) {
+			for (GKAParticipant p : participants) {
+				p.setNonceLen(nonceLength);
+				p.setPkLen(publicKeyLength);
+			}
 		}
 	}
 	
