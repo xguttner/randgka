@@ -24,7 +24,7 @@ import cz.muni.fi.randgka.gka.GKAProtocolParams;
 import cz.muni.fi.randgka.gka.GKAProtocolRound;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.randgkaapp.GKAActivity;
-import cz.muni.fi.randgka.randgkaapp.GKADecisionActivity;
+import cz.muni.fi.randgka.randgkaapp.GKAMemberActivity;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.LengthsNotEqualException;
 import cz.muni.fi.randgka.tools.PMessage;
@@ -42,6 +42,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 /**
  * Class utilizing the communication over the Bluetooth channel.
@@ -147,7 +148,7 @@ public class BluetoothCommunicationService extends Service {
 			// member initialization + connection to opened server socket
 			else if (action.equals(Constants.MEMBER_RUN)) {
 				initialize(intent);
-				connectToServer((BluetoothDevice)intent.getParcelableExtra("bluetoothDevice"), this);
+				connectToServer((BluetoothDevice)intent.getParcelableExtra(Constants.DEVICE), this);
 			} 
 			// after camera preview has been set, we can utilize it in randomness retrieval
 			else if (action.equals(Constants.SET_SECURE_RANDOM)) {
@@ -237,7 +238,7 @@ public class BluetoothCommunicationService extends Service {
 	 * @param retrieveKey - true if send back to the calling app, false if print
 	 */
 	private void getKey(boolean retrieveKey) {
-		Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.SHOW_RETRIEVE_KEY : GKAActivity.GET_GKA_KEY);
+		Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.RETRIEVE_GKA_KEY : GKAActivity.PRINT_GKA_KEY);
 	    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
 	    lbm.sendBroadcast(printKeyIntent);
 	}
@@ -461,11 +462,9 @@ public class BluetoothCommunicationService extends Service {
 			threads.put(me.getAddress(), null);
 			
 			// after the successful connection, raise GKAActivity object to show the results to the member
-			Intent moving = new Intent(this, GKAActivity.class);
-			moving.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			moving.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
-			moving.putExtra(Constants.TECHNOLOGY, Constants.BLUETOOTH_GKA);
-			startActivity(moving);
+			Intent moving = new Intent(GKAMemberActivity.CONNECTED);
+			lbm.sendBroadcast(moving);
+			Log.d("broadcast sent", "ok");
         } catch (IOException e) {
         	e.printStackTrace();
         }

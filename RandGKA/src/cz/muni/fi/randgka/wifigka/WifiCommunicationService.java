@@ -233,7 +233,7 @@ public class WifiCommunicationService extends Service {
 		 * @param retrieveKey - true if send back to the calling app, false if print
 		 */
 		private void getKey(boolean retrieveKey) {
-			Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.SHOW_RETRIEVE_KEY : GKAActivity.GET_GKA_KEY);
+			Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.RETRIEVE_GKA_KEY : GKAActivity.PRINT_GKA_KEY);
 		    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
 		    lbm.sendBroadcast(printKeyIntent);
 		}

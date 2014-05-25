@@ -76,4 +76,8 @@ public final class Constants {
 	public static final String DEVICE = "device";
 
 	public static final String TECHNOLOGY = "technology";
+
+	public static final String IS_LEADER = "isLeader";
+
+	public static final int REQUEST_RETRIEVE_GKA_KEY = 1789;
 }
