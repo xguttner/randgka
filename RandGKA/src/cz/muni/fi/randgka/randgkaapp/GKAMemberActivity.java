@@ -14,6 +14,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -106,7 +107,7 @@ public class GKAMemberActivity extends Activity {
 			
 			// connect
 			Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
-			commServiceIntent.setAction(BluetoothCommunicationService.MEMBER_RUN);
+			commServiceIntent.setAction(Constants.MEMBER_RUN);
 			commServiceIntent.putExtra("bluetoothDevice", bluetoothDevice);
 			commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
 			startService(commServiceIntent);

@@ -10,6 +10,9 @@ public class UHRandExtractorParams {
 	public static final int MAXIMAL_OUTPUT = 2161,
 							MAXIMAL_INPUT = 2447;
 	
+	/**
+	 * set a number of different lengths to enable appropriate length retrieval
+	 */
 	private static void setLengths() {
 		lengths = new TreeMap<Integer, Integer>();
 		lengths.put(162, 347);
@@ -19,6 +22,10 @@ public class UHRandExtractorParams {
 		lengths.put(MAXIMAL_OUTPUT, MAXIMAL_INPUT);
 	}
 	
+	/**
+	 * @param length - wanted randomness extraction output length
+	 * @return least greater tuple (input length x output length) able to produce given output length
+	 */
 	public static Entry<Integer, Integer> getLengths(int length) {
 		if (!isSet) setLengths();
 		

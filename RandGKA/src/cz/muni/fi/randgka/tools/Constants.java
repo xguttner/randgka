@@ -54,4 +54,26 @@ public final class Constants {
 	public static final String KEY = "key";
 
 	public static final int WIFI_PORT = 6540;
+	
+	public static final String LEADER_RUN = "LEADER_RUN",
+			MEMBER_RUN = "MEMBER_RUN",
+			GKA_RUN = "GKA_RUN",
+			SET_SECURE_RANDOM = "SET_SECURE_RANDOM",
+			STOP = "STOP";
+
+	public static final String VERSION = "version";
+
+	public static final String NONCE_LENGTH = "nonceLength";
+
+	public static final String GROUP_KEY_LENGTH = "groupKeyLength";
+
+	public static final String PUBLIC_KEY_LENGTH = "publicKeyLength";
+
+	public static final String PARTICIPANTS = "participants";
+
+	public static final String PMESSAGE = "pMessage";
+
+	public static final String DEVICE = "device";
+
+	public static final String TECHNOLOGY = "technology";
 }

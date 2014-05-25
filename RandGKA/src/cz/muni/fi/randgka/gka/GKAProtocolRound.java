@@ -7,11 +7,12 @@ import cz.muni.fi.randgka.tools.PMessage;
 
 public class GKAProtocolRound {
 	
-	public static final int PRINT_PARTICIPANTS = 3,
-							CONTINUE = 2,
-							ERROR = 1,
-							SUCCESS = 0;
+	public static final int PRINT_PARTICIPANTS = 3, // print listed participants
+							CONTINUE = 2, // continue with the protocol
+							ERROR = 1, // error encounter
+							SUCCESS = 0; // protocol instance successfully established a new key
 	
+	// messages to sent to the given participants
 	private Map<GKAParticipant, PMessage> messages;
 	private int actionCode;
 	
@@ -20,6 +21,12 @@ public class GKAProtocolRound {
 		messages = new HashMap<GKAParticipant, PMessage>();
 	}
 	
+	/**
+	 * Set new participants x message tuple to send
+	 * 
+	 * @param gkaParticipants
+	 * @param pMessage
+	 */
 	public void put(GKAParticipants gkaParticipants, PMessage pMessage) {
 		if (gkaParticipants != null) {
 			for (GKAParticipant gkaParticipant : gkaParticipants.getParticipants()) {
@@ -28,6 +35,12 @@ public class GKAProtocolRound {
 		}
 	}
 	
+	/**
+	 * Set new participant x message tuple to send
+	 * 
+	 * @param gkaParticipant
+	 * @param pMessage
+	 */
 	public void put(GKAParticipant gkaParticipant, PMessage pMessage) {
 		messages.put(gkaParticipant, pMessage);
 	}

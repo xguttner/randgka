@@ -139,11 +139,11 @@ public class GKAActivity extends Activity {
 						
 						for (GKAParticipant g : gkaParticipants.getParticipants()) {
 							protocolParticipantsTV.append(g.getName());
-							if (g.getAuthPublicKey()!=null) {
+							if (g.getPublicKey()!=null) {
 								try {
 									MessageDigest md = MessageDigest.getInstance("SHA-256");
 									md.update(g.getNonce());
-									protocolParticipantsTV.append("\nAuthentication hash: " + bytesToHex(md.digest(g.getAuthPublicKey().getEncoded())));
+									protocolParticipantsTV.append("\nAuthentication hash: " + bytesToHex(md.digest(g.getPublicKey().getEncoded())));
 								} catch (NoSuchAlgorithmException e) {
 									e.printStackTrace();
 								}
@@ -207,7 +207,7 @@ public class GKAActivity extends Activity {
 		super.onStart();
 
         Intent setSecureRandom = new Intent(this, technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.class : BluetoothCommunicationService.class);
-        setSecureRandom.setAction(technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.SET_SECURE_RANDOM : BluetoothCommunicationService.SET_SECURE_RANDOM);
+        setSecureRandom.setAction(Constants.SET_SECURE_RANDOM);
         startService(setSecureRandom);
 	}
 	
@@ -223,13 +223,13 @@ public class GKAActivity extends Activity {
 			CameraMESHolder.cameraMES = null;
 		}
 		if (technology.equals(Constants.BLUETOOTH_GKA)) {
-			Intent stopService = new Intent(this, BluetoothCommunicationService.class);
-			stopService.setAction(BluetoothCommunicationService.STOP);
-			startService(stopService);
+			Intent stopThreads = new Intent(this, BluetoothCommunicationService.class);
+			stopThreads.setAction(Constants.STOP);
+			startService(stopThreads);
 		} else if (technology.equals(Constants.WIFI_GKA)) {
-			Intent stopService = new Intent(this, WifiCommunicationService.class);
-			stopService.setAction(WifiCommunicationService.STOP);
-			startService(stopService);
+			Intent stopThreads = new Intent(this, WifiCommunicationService.class);
+			stopThreads.setAction(Constants.STOP);
+			startService(stopThreads);
 		}
 		if (br != null) lbm.unregisterReceiver(br);
 	}
@@ -263,11 +263,11 @@ public class GKAActivity extends Activity {
 		
 		if (technology.equals(Constants.WIFI_GKA)) {
 			commServiceIntent.setClass(this, WifiCommunicationService.class);
-			commServiceIntent.setAction(WifiCommunicationService.GKA_RUN);
+			commServiceIntent.setAction(Constants.GKA_RUN);
 			startService(commServiceIntent);
 		} else if (technology.equals(Constants.BLUETOOTH_GKA)) {
 			commServiceIntent.setClass(this, BluetoothCommunicationService.class);
-			commServiceIntent.setAction(BluetoothCommunicationService.GKA_RUN);
+			commServiceIntent.setAction(Constants.GKA_RUN);
 			startService(commServiceIntent);
 		}
 	}

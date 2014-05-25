@@ -2,11 +2,16 @@ package cz.muni.fi.randgka.provider;
 
 import java.security.Provider;
 
+/**
+ * Cryptography service provider implementing SecureRandom service utilizing
+ * Carter-Wegman universal families of hash functions with min-entropy obtained
+ * from the camera source.
+ */
 public final class RandGKAProvider extends Provider {
 	
 	private static final long serialVersionUID = -239135023709413494L;
 	
-	public static final String RAND_EXTRACTOR = "UHRandExtractor";
+	public static final String RAND_EXTRACTOR = "RAND_EXTRACTOR";
 	
 	private static final String name = "RandGKAProvider";
 	private static final double version = 1.0;
@@ -14,7 +19,7 @@ public final class RandGKAProvider extends Provider {
 
 	public RandGKAProvider() {
 		super(name, version, info);
-		put("SecureRandom.UHRandExtractor", "cz.muni.fi.randgka.provider.random.UHRandExtractor");
+		put("SecureRandom."+RAND_EXTRACTOR, "cz.muni.fi.randgka.provider.random.UHRandExtractor");
 	}
 	
 	protected RandGKAProvider(String name, double version, String info) {

@@ -20,18 +20,21 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+/**
+ * Activity enabling access to the preprocessed camera output.
+ */
 public class MinEntropySourceAppActivity extends Activity {
 	
 	private MinEntropySource mes;
 	private TextView otv;
-	private EditText ofet,
-		olet;
+	private EditText ofet, olet;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_min_entropy_source_app);
         
+		// get view components
 		otv = (TextView) findViewById(R.id.textView2);
 		ofet = (EditText) findViewById(R.id.editText1);
 		olet = (EditText) findViewById(R.id.editText2);
@@ -40,6 +43,7 @@ public class MinEntropySourceAppActivity extends Activity {
 		SurfaceHolder holder=surface.getHolder();
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
+        // invoke min-entropy source object
 		CameraMES cameraMES = new CameraMES();
         cameraMES.initialize(surface);
         mes = cameraMES;
@@ -57,15 +61,23 @@ public class MinEntropySourceAppActivity extends Activity {
 		mes.stop();
 	}
 	
+	/**
+	 * Get data from the source and process them in a wanted way.
+	 * 
+	 * @param view
+	 */
 	public void getSourceData(View view) {
+		// get output length
 		int outputLength = 0;
 		try {
 			outputLength = Integer.parseInt(olet.getText().toString());
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		}
+		// get output file name
 		String outFileName = ofet.getText().toString();
 		
+		// store the min-entropy sequence
 		if (outFileName.length() > 0) {
 			String state = Environment.getExternalStorageState();
 		    if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -85,13 +97,13 @@ public class MinEntropySourceAppActivity extends Activity {
 		    } else {
 		    	Log.e("min-entropy", "Storing into external storage failed.");
 		    }
-		} else {
+		} 
+		// display the min-entropy sequence
+		else {
 			ByteSequence minEntropySequence = mes.getMinEntropyData(outputLength, null);
 			BigInteger minEntropyNum = new BigInteger(1, minEntropySequence.getSequence());
 			minEntropyNum.shiftRight(8 - minEntropySequence.getBitLength()%8);
 			otv.setText(minEntropyNum.toString(16).toCharArray(), 0, minEntropyNum.toString(16).toCharArray().length);
 		}
-		
 	}
-
 }

@@ -15,7 +15,6 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
 import android.os.Build;
 import android.os.Looper;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -36,23 +35,24 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	private Looper cameraLooper;
 	private SurfaceView surfaceView;
 	private byte[] imageBuffer;
-	private static final int //PREVIEW_HEIGHT = 240, 
-			//PREVIEW_WIDTH = 320, 
-			//YBLOCK_SIZE = PREVIEW_HEIGHT*PREVIEW_WIDTH,
-			MAXIMUM_FPS = 16000;
+	private static final int MAXIMUM_FPS = 16000;
 	
 	// processing-related parameters
-	private static final int SQUARE_MATRIX_WIDTH = 20, // number of squares in the row the preview frame is divided into
-			SQUARE_SIDE = 16, 
-			//SQUARE_OFFSET = YBLOCK_SIZE / (SQUARE_SIDE*SQUARE_SIDE),
-			FRAME_SKIPPER = 1, // we take every FRAME_SKIPPER-th frame
-			PREPROCESSED_SAMPLE_LENGTH = 4;
+	private static final int FRAME_SKIPPER = 1, // we take every FRAME_SKIPPER-th frame
+			P_WIDTH = 320, // preview width
+			P_HEIGHT = 240, //preview height
+			YB_SIZE = P_WIDTH*P_HEIGHT, // no of pixels
+			SQ_SIDE = 10,
+			SQ_IN_ROW = P_WIDTH/SQ_SIDE,
+			SQ_IN_COLUMN = P_HEIGHT/SQ_SIDE,
+			NO_OF_ROW_MERGE = 8,
+			PREPROCESSED_LENGTH = SQ_IN_ROW/NO_OF_ROW_MERGE,
+			PER_BYTE_ROUNDS = (int)Math.ceil(8.0/PREPROCESSED_LENGTH);
 	private ByteSequence sourceData,
 			byteHolder;
 	private CountDownLatch countDownLatch;
 	private boolean preprocessingFlag;
 	private int bytesPerSample,
-			currentShift = 0,
 			frameNo = 0,
 			sampleNumber,
 			currentSample;
@@ -60,17 +60,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	// storing-related parameters
 	private FileOutputStream fos;
 	private boolean store;
-	
-	//new preprocessing
-	private static final int P_WIDTH = 320,
-			P_HEIGHT = 240,
-			YB_SIZE = P_WIDTH*P_HEIGHT,
-			SQ_SIDE = 10,
-			SQ_IN_ROW = P_WIDTH/SQ_SIDE,
-			SQ_IN_COLUMN = P_HEIGHT/SQ_SIDE,
-			NO_OF_ROW_MERGE = 8,
-			PREPROCESSED_LENGTH = SQ_IN_ROW/NO_OF_ROW_MERGE,
-			PER_BYTE_ROUNDS = (int)Math.ceil(8.0/PREPROCESSED_LENGTH);
 	
 	/**
 	 * Non-parametric constructor
@@ -100,6 +89,7 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		cameraSettings.setPreviewFormat(ImageFormat.NV21);
 		cameraSettings.setPreviewSize(P_WIDTH, P_HEIGHT);
 		
+		// set frame rates
 		try {
 			List<int[]> rates = cameraSettings.getSupportedPreviewFpsRange();
 			if (rates != null && rates.size() > 0) {
@@ -176,12 +166,10 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 				// decision about preprocessing
 				if (preprocessingFlag) data = preprocess(new ByteSequence(newData, bytesPerSample*8));
 				else data = new ByteSequence(newData, bytesPerSample*8);
-				//Log.d("oneseq", data.toString());
 				// decision about storing the data
 				if (store) {
 					byteHolder.add(data);
 					if ((currentSample+1)%PER_BYTE_ROUNDS == 0){
-						//Log.d("bh", byteHolder.toString());
 						fos.write(byteHolder.getSequence());
 						byteHolder = new ByteSequence();
 					}
@@ -239,47 +227,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		return returnSequence;
 	}
 	
-	/**
-	 * Preprocessing mechanism. Mechanism is set for the NV21 format that should be available in all
-	 * Android devices. 
-	 * 
-	 * @param randSequence to preprocess
-	 * @return ByteSequence of the preprocessed data
-	 */
-	/*private ByteSequence preprocess2(ByteSequence randSequence) {
-		// shift the pixels used as a source between frames
-		currentShift = (currentShift + 5) % SQUARE_SIDE;
-		
-		byte[] inputData = randSequence.getSequence();
-		byte[] preprocessedData = new byte[PREPROCESSED_SAMPLE_LENGTH];
-		byte[] columnPixels = new byte[SQUARE_MATRIX_WIDTH];
-		
-		ByteSequence returnSequence = new ByteSequence();
-		
-		// process frame into columnPixels
-		for (int j = 0, noOfSq = 0; noOfSq < SQUARE_OFFSET; noOfSq++) {
-			j = (SQUARE_SIDE * SQUARE_MATRIX_WIDTH) * // pixels per row
-					((currentShift+noOfSq)%SQUARE_SIDE + SQUARE_SIDE * (int)(noOfSq/SQUARE_MATRIX_WIDTH)) //line; shift verticaly possible here
-					+ SQUARE_SIDE*(noOfSq%SQUARE_MATRIX_WIDTH) // pixels from row begin to current square
-					+ (int)((noOfSq/SQUARE_SIDE)+currentShift)%SQUARE_SIDE; //pixels from row begin in the square; another possibility of shift (horizontaly) on this line 
-			columnPixels[noOfSq%SQUARE_MATRIX_WIDTH] = (byte)(0xff & ((int)columnPixels[noOfSq%SQUARE_MATRIX_WIDTH] ^ ((int)inputData[j] ^ (int)inputData[YBLOCK_SIZE+2*(int)(j/4)] ^ (int)inputData[YBLOCK_SIZE+2*(int)(j/4)+1])));
-		}
-		
-		// process columnPixels into PREPROCESSED_SAMPLE_LENGTH bits
-		for (int i = 0; i < PREPROCESSED_SAMPLE_LENGTH; i++) {
-			for (int k = 0; k < 5; k++) { // xoring different columns into one of the PREPROCESSED_SAMPLE_LENGTH important
-				preprocessedData[i] = (byte)(0xff & ((int)preprocessedData[i] ^ (int)columnPixels[i + k*PREPROCESSED_SAMPLE_LENGTH]));
-			}
-			for (int l = 1; l < 8; l++) { // xoring the bits of one byte to get the outcoming bit (stored as LSB of a byte)
-				byte before = preprocessedData[i];
-				preprocessedData[i] = (byte)(0xff & ((int)(0x01 & before) ^ (int)(0x7f & (preprocessedData[i] >> 1))));
-			}
-			returnSequence.addBit(preprocessedData[i]);
-		}
-		
-		return returnSequence;
-	}*/
-	
 	@Override
 	public ByteSequence getMinEntropyData(int minEntropyDataLength, File storage) {
 		return this.getSourceData(minEntropyDataLength, storage, true);
@@ -311,8 +258,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 		// set values to be seen from onPreviewFrame method
 		this.sampleNumber = (int)Math.ceil((double)minEntropyDataLength/getBitsPerSample(preprocessingFlag));
 		this.preprocessingFlag = preprocessingFlag;
-		
-		Log.d("melen", minEntropyDataLength+" ");
 		
 		try {
 			// decide about storing
@@ -385,7 +330,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 				camera.setPreviewCallbackWithBuffer(this);
 			}
 		} catch (IOException e) {
-			Log.e("CameraHandler", "Cannot set preview");
 			e.printStackTrace();
 		}
 	}

@@ -13,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -80,7 +79,7 @@ public class GKADecisionActivity extends Activity {
 					startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), Constants.REQUEST_DISCOVERABLE_BT);
 					
 					Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
-					commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
+					commServiceIntent.setAction(Constants.LEADER_RUN);
 					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 				}
@@ -114,7 +113,7 @@ public class GKADecisionActivity extends Activity {
 					startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), Constants.REQUEST_DISCOVERABLE_BT);
 					
 					Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
-					commServiceIntent.setAction(BluetoothCommunicationService.LEADER_RUN);
+					commServiceIntent.setAction(Constants.LEADER_RUN);
 					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 				}
@@ -131,7 +130,7 @@ public class GKADecisionActivity extends Activity {
 			if (role.equals(LEADER)) {
 				if (WifiCommunicationService.isWifiConnected(true)) {
 					Intent commServiceIntent = new Intent(this, WifiCommunicationService.class);
-					commServiceIntent.setAction(WifiCommunicationService.LEADER_RUN);
+					commServiceIntent.setAction(Constants.LEADER_RUN);
 					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 					
@@ -143,7 +142,7 @@ public class GKADecisionActivity extends Activity {
 			else {
 				if (WifiCommunicationService.isWifiConnected(false)) {
 					Intent commServiceIntent = new Intent(this, WifiCommunicationService.class);
-					commServiceIntent.setAction(WifiCommunicationService.MEMBER_RUN);
+					commServiceIntent.setAction(Constants.MEMBER_RUN);
 					commServiceIntent.putExtra(Constants.RETRIEVE_KEY, returnKey);
 					startService(commServiceIntent);
 					

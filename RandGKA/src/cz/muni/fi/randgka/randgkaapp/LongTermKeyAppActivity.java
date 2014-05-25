@@ -12,7 +12,6 @@ import cz.muni.fi.randgka.tools.LongTermKeyProvider;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -21,6 +20,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+/**
+ * Activity enabling to generate a fresh key-pair for authentication.
+ */
 public class LongTermKeyAppActivity extends Activity {
 	private Spinner publicKeyLengthsSpinner,
 		entropySourceSpinner;
@@ -81,18 +83,25 @@ public class LongTermKeyAppActivity extends Activity {
 		}
 	}
 
+	/**
+	 * Generate new key-pair.
+	 * 
+	 * @param view
+	 */
 	public void generateKeyPair(View view) {
+		// get desired key length
 		Integer keyLength = Integer.parseInt(String.valueOf(publicKeyLengthsSpinner.getSelectedItem()));
+		// get the source of entropy for key-pair generation
 		String entropySourceS = (String)entropySourceSpinner.getSelectedItem();
 		
 		SecureRandom secureRandom = null;
 		try {
-			if (entropySourceS.equals(NATIVE_ES)) {
-				secureRandom = new SecureRandom();
-			} else if (entropySourceS.equals(RAND_EXT_ES)) {
-				Provider pr = new RandGKAProvider();
-				secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, pr);
-			}
+			// native randomness source
+			if (entropySourceS.equals(NATIVE_ES)) secureRandom = new SecureRandom();
+			// use designed randomness extractor with camera entropy source
+			else if (entropySourceS.equals(RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+			
+			// generate key-pair
 			LongTermKeyProvider longTermKeyProvider = new LongTermKeyProvider(this, secureRandom);
 			longTermKeyProvider.generateKeys(keyLength);
 			

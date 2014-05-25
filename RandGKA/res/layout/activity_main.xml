@@ -24,7 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/button1"
-        android:onClick="moveToRandExtractor2AppActivity"
+        android:onClick="moveToRandExtractorAppActivity"
         android:text="@string/rand_extractor" />
 
      <Button

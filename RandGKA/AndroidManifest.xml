@@ -59,17 +59,8 @@
             android:label="@string/title_activity_public_key_cryptography_app" >
         </activity>
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.GKAProtocolPrintKeyAppActivity"
-            android:label="@string/title_activity_gkaprotocol_print_key_app" >
-        </activity>
-        <activity android:name="cz.muni.fi.randgka.randgkaapp.SettingsActivity" />
-        <activity
             android:name="cz.muni.fi.randgka.randgkaapp.GKAMemberActivity"
             android:label="@string/title_activity_bluetooth_gkamember" >
-        </activity>
-        <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.GKALeaderActivity"
-            android:label="@string/title_activity_bluetooth_gkaleader" >
         </activity>
         <activity
             android:name="cz.muni.fi.randgka.randgkaapp.GKADecisionActivity"

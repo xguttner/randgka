@@ -8,22 +8,21 @@ import java.security.PrivateKey;
  */
 public class GKAProtocolParams {
 	
-	public static final int NON_AUTH = 0,
-							AUTH = 1,
-							AUTH_CONF = 2;
+	public static final int NON_AUTH = 0, // non-authenticated version
+							AUTH = 1, // authenticated version
+							AUTH_CONF = 2; // authenticated + key confirmation version
 	
 	private int version; // version of the protocol to use - authenticated / non-authenticated
 	private int nonceLength, // length of the nonce to be used
-			publicKeyLength, 
-			groupKeyLength;
-	private PrivateKey privateKey;
-	private InputStream modpFile;
+			publicKeyLength, // public key length
+			groupKeyLength; // group key length
+	private PrivateKey privateKey; // application's device private key
+	private InputStream modpFile; // xml file containing modp group parameters
 	
 	public GKAProtocolParams() {
 		super();
 	}
-	public GKAProtocolParams(int version, int nonceLength,
-			int groupKeyLength, int publicKeyLength, InputStream modpFile, PrivateKey privateKey) {
+	public GKAProtocolParams(int version, int nonceLength, int groupKeyLength, int publicKeyLength, InputStream modpFile, PrivateKey privateKey) {
 		super();
 		this.version = version;
 		this.nonceLength = nonceLength;

@@ -178,25 +178,22 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	 */
 	public UHRandExtractor() throws SecurityException {
 		mes = CameraMESHolder.cameraMES;
-		if (!mes.ready()) throw new SecurityException("Min-entropy source was not successfully initialized.");
+		if (!mes.ready()) throw new SecurityException("Min-entropy source hasn't been successfully initialized.");
 	}
 	
 	@Override
 	protected byte[] engineGenerateSeed(int numBytes) {
-		Log.d("generate", "seed");
 		return getBits(numBytes*8);
 	}
 
 	@Override
 	protected void engineNextBytes(byte[] bytes) {
-		Log.d("next", "bytes");
 		System.arraycopy(getBits(bytes.length*8), 0, bytes, 0, bytes.length);
 	}
 
 	@Override
 	protected void engineSetSeed(byte[] seed) {
 		// not needed
-		Log.d("set", "seed");
 	}
 	
 	/**
@@ -204,13 +201,13 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	 * @return byte array of random bits of the given length
 	 */
 	private byte[] getBits(int length) {
-		Log.d("bits demanded",length+"");
 		int lengthLeft = length;
 		ByteSequence returnSequence = new ByteSequence();
 		ByteSequence actualSequence = null;
 		ByteSequence sourceSequence = null;
 		ByteSequence seed = null;
 		
+		// rounds in which we use the maximal possible output length
 		while (UHRandExtractorParams.getLengths(lengthLeft) == null) {
 			if (seed == null) seed = new ByteSequence(seedArray, UHRandExtractorParams.MAXIMAL_INPUT);
 			
@@ -219,9 +216,11 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 			actualSequence.add(sourceSequence);
 		
 			returnSequence.add(process(seed, actualSequence, UHRandExtractorParams.MAXIMAL_OUTPUT));
+			
 			lengthLeft -= UHRandExtractorParams.MAXIMAL_OUTPUT;
 		}
 		
+		// last round in which we use appropriate input/output lengths
 		Entry<Integer, Integer> lengths = UHRandExtractorParams.getLengths(lengthLeft);
 		seed = new ByteSequence(seedArray, lengths.getValue());
 		
@@ -231,11 +230,18 @@ public final class UHRandExtractor extends SecureRandomSpi implements RandExtrac
 	
 		returnSequence.add(process(seed, actualSequence, lengths.getKey()));
 		
+		// set the wanted bit length
 		returnSequence.setBitLength(length);
 		
 		return returnSequence.getSequence();
 	}
 	
+	/**
+	 * @param seed
+	 * @param minEntropySeq
+	 * @param outputLength
+	 * @return processed output sequence
+	 */
 	private ByteSequence process(ByteSequence seed, ByteSequence minEntropySeq, int outputLength) {
 		ByteSequence returnSequence = new ByteSequence();
 		
