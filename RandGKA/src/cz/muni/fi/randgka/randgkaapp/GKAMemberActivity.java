@@ -15,7 +15,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -46,6 +45,8 @@ public class GKAMemberActivity extends Activity {
 	
 	public static final String CONNECTED = "connected";
 	
+	private String entropySource;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -56,6 +57,7 @@ public class GKAMemberActivity extends Activity {
 		devicesSpinner = (Spinner)findViewById(R.id.spinner1);
 		
 		retrieveKey = getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false);
+		entropySource = getIntent().getStringExtra(Constants.ENTROPY_SOURCE);
 		
 		// find out the bluetooth state, if disabled - go to the GKADecisionActivity to decide about it
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -72,7 +74,6 @@ public class GKAMemberActivity extends Activity {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
-				Log.d("something", "received");
 				// new bluetooth device was found
 		        if (BluetoothDevice.ACTION_FOUND.equals(action)) {
 		            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -86,8 +87,8 @@ public class GKAMemberActivity extends Activity {
 		            	devicesSpinner.setAdapter(devices);
 		            }
 		        }
+		        // successfully connected - 
 		        else if (action.equals(GKAMemberActivity.CONNECTED)) {
-		        	Log.d("here", "ami");
 		        	Intent moving = new Intent(context, GKAActivity.class);
 					moving.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
 					moving.putExtra(Constants.TECHNOLOGY, Constants.BLUETOOTH_GKA);
@@ -157,6 +158,7 @@ public class GKAMemberActivity extends Activity {
 		commServiceIntent.setAction(Constants.MEMBER_RUN);
 		commServiceIntent.putExtra(Constants.DEVICE, bluetoothDevice);
 		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
+		commServiceIntent.putExtra(Constants.ENTROPY_SOURCE, entropySource);
 		startService(commServiceIntent);
 	}
  

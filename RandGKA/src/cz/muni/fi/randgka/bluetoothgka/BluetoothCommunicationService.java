@@ -80,7 +80,10 @@ public class BluetoothCommunicationService extends Service {
 					publicKeyLength; // length of the public key pair in bytes
 	
 	// determine, if another application wants to gain the resulting key (true, otherwise false)
-	private boolean retrieveKey;
+	private boolean retrieveKey,
+		protocolRunning;
+	
+	private String entropySourceString;
 	
 	@Override
 	public void onCreate() {}
@@ -106,14 +109,20 @@ public class BluetoothCommunicationService extends Service {
 		protocol = new AugotGKA();
 		participants = new GKAParticipants();
 		newParticipantId = 0;
+		protocolRunning = false;
 		
 		context = this.getBaseContext();
 		lbm = LocalBroadcastManager.getInstance(this);
 		pHandler = new PMessageHandler();
 		
-		// was invoked by another app?
-		if (intent != null) retrieveKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
-		else retrieveKey = false;
+		if (intent != null) {
+			retrieveKey = intent.getBooleanExtra(Constants.RETRIEVE_KEY, false);
+			entropySourceString = intent.getStringExtra(Constants.ENTROPY_SOURCE);
+		}
+		else {
+			retrieveKey = false;
+			entropySourceString = Constants.RAND_EXT_ES;
+		}
 	}
 	
 	/**
@@ -152,15 +161,17 @@ public class BluetoothCommunicationService extends Service {
 			} 
 			// after camera preview has been set, we can utilize it in randomness retrieval
 			else if (action.equals(Constants.SET_SECURE_RANDOM)) {
-			    secureRandom = new SecureRandom(); // SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+			    if (entropySourceString.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+			    else secureRandom = new SecureRandom();
 			    longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
 			}
 			// protocol run invocation (by leader)
 			else if (action.equals(Constants.GKA_RUN)) {
-				if (participants != null) {
+				if (participants != null && !protocolRunning) {
+					protocolRunning = true;
 					initRun(intent);
 					
-					//if (listenSocketThread != null) listenSocketThread.interrupt();
+					if (listenSocketThread != null) listenSocketThread.interrupt();
 					
 					// get the source of modp group parameters
 					AssetManager am = getAssets();
@@ -181,6 +192,7 @@ public class BluetoothCommunicationService extends Service {
 			}
 			// stop this service
 			else if (action.equals(Constants.STOP)) {
+				protocolRunning = false;
 				interruptThreads();
 			}
 		} catch (IOException e) {
@@ -216,13 +228,18 @@ public class BluetoothCommunicationService extends Service {
 	private void sendRound(GKAProtocolRound pr) {
 		if (pr != null) {
 			// key is established - we use it in appropriate manner
-			if (pr.getActionCode() == GKAProtocolRound.SUCCESS) getKey(retrieveKey);
+			if (pr.getActionCode() == GKAProtocolRound.SUCCESS){
+				protocolRunning = false;
+				getKey(retrieveKey);
+			}
 			// participants are determined - print them
 			else if (pr.getActionCode() == GKAProtocolRound.PRINT_PARTICIPANTS) {
 				Intent getDevices = new Intent(GKAActivity.GET_PARTICIPANTS);
 				getDevices.putExtra(Constants.PARTICIPANTS, participants);
 				lbm.sendBroadcast(getDevices);
 			}
+			// an error occurred
+			else if (pr.getActionCode() == GKAProtocolRound.ERROR) protocolRunning = false;
 			// each message send to the given target
 			if (pr.getMessages() != null && threads != null) {
 				for (Entry<GKAParticipant, PMessage> e : pr.getMessages().entrySet()) {

@@ -32,18 +32,20 @@ import android.widget.TextView;
  */
 public class GKADecisionActivity extends Activity {
 	
-	private static final String LEADER = "Leader";
-	private static final String MEMBER = "Member";
+	private static final String LEADER = "Leader",
+			MEMBER = "Member";
 	
 	// true - result key retrieval by another app, false otherwise
 	private boolean retrieveKey = false;
 	
 	private Spinner technologySpinner,
-		roleSpinner;
+		roleSpinner,
+		entropySourceSpinner;
 	
 	private Intent moving;
 	
-	private String role;
+	private String role,
+		entropySource;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,13 @@ public class GKADecisionActivity extends Activity {
 		roles.add(MEMBER);
 		roleSpinner = (Spinner)findViewById(R.id.spinner1);
 		roleSpinner.setAdapter(roles);
+		
+		ArrayAdapter<String> entropySources = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		entropySources.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		entropySources.add(Constants.NATIVE_ES);
+		entropySources.add(Constants.RAND_EXT_ES);
+		entropySourceSpinner = (Spinner)findViewById(R.id.spinner3);
+		entropySourceSpinner.setAdapter(entropySources);
 	}
 
 	@Override
@@ -126,11 +135,13 @@ public class GKADecisionActivity extends Activity {
 		// get the parameters
 		String technology = (String) technologySpinner.getSelectedItem();
 		role = (String) roleSpinner.getSelectedItem();
+		entropySource = (String)entropySourceSpinner.getSelectedItem();
 		
 		// setup new intent
 		moving = new Intent();
 		moving.putExtra(Constants.TECHNOLOGY, technology);
 		moving.putExtra(Constants.IS_LEADER, role.equals(LEADER));
+		moving.putExtra(Constants.ENTROPY_SOURCE, entropySource);
 		if (retrieveKey) moving.putExtra(Constants.RETRIEVE_KEY, true);
 		
 		// Bluetooth chosen
@@ -177,6 +188,7 @@ public class GKADecisionActivity extends Activity {
 		
 		Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
 		commServiceIntent.setAction(Constants.LEADER_RUN);
+		commServiceIntent.putExtra(Constants.ENTROPY_SOURCE, entropySource);
 		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
 		startService(commServiceIntent);
 	}
@@ -190,6 +202,7 @@ public class GKADecisionActivity extends Activity {
 		Intent commServiceIntent = new Intent(this, WifiCommunicationService.class);
 		commServiceIntent.setAction(action);
 		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
+		commServiceIntent.putExtra(Constants.ENTROPY_SOURCE, entropySource);
 		startService(commServiceIntent);
 		
 		moving.setClass(this, GKAActivity.class);

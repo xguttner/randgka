@@ -80,4 +80,10 @@ public final class Constants {
 	public static final String IS_LEADER = "isLeader";
 
 	public static final int REQUEST_RETRIEVE_GKA_KEY = 1789;
+
+	public static final String ENTROPY_SOURCE = "ENTROPY_SOURCE";
+
+	public static final String NATIVE_ES = "native";
+
+	public static final String RAND_EXT_ES = "randomness extractor";
 }

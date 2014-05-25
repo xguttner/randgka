@@ -35,11 +35,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.MinEntropySourceAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.MinEntropySourceActivity"
             android:label="@string/rand_source" >
         </activity>
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.RandExtractorAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.RandExtractorActivity"
             android:label="@string/rand_extractor" >
         </activity>
         <service
@@ -55,7 +55,7 @@
             android:label="@string/title_activity_gkaprotocol" >
         </activity>
         <activity
-            android:name="cz.muni.fi.randgka.randgkaapp.LongTermKeyAppActivity"
+            android:name="cz.muni.fi.randgka.randgkaapp.LongTermKeyActivity"
             android:label="@string/title_activity_public_key_cryptography_app" >
         </activity>
         <activity

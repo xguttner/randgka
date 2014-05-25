@@ -23,7 +23,7 @@ import android.widget.TextView;
 /**
  * Activity enabling to generate a fresh key-pair for authentication.
  */
-public class LongTermKeyAppActivity extends Activity {
+public class LongTermKeyActivity extends Activity {
 	private Spinner publicKeyLengthsSpinner,
 		entropySourceSpinner;
 	private TextView otv;

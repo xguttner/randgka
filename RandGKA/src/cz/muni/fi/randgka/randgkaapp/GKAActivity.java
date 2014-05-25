@@ -171,7 +171,7 @@ public class GKAActivity extends Activity {
 									// nonce + key message digest
 									MessageDigest md = MessageDigest.getInstance("SHA-256");
 									md.update(g.getNonce());
-									protocolParticipantsTV.append("\nAuthentication hash: " + (new BigInteger(md.digest(g.getPublicKey().getEncoded())).toString(32)));
+									protocolParticipantsTV.append("\nAuthentication hash: " + (new BigInteger(1, md.digest(g.getPublicKey().getEncoded())).toString(16)));
 								} catch (NoSuchAlgorithmException e) {
 									e.printStackTrace();
 								}

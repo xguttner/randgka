@@ -23,7 +23,7 @@ import android.widget.TextView;
 /**
  * Activity enabling access to the preprocessed camera output.
  */
-public class MinEntropySourceAppActivity extends Activity {
+public class MinEntropySourceActivity extends Activity {
 	
 	private MinEntropySource mes;
 	private TextView otv;

@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
 	 * @param view
 	 */
 	public void moveToMinEntropySourceAppActivity(View view) {
-		Intent moving = new Intent(this, MinEntropySourceAppActivity.class);
+		Intent moving = new Intent(this, MinEntropySourceActivity.class);
 		startActivity(moving);
 	}
 	
@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
 	 * @param view
 	 */
 	public void moveToRandExtractorAppActivity(View view) {
-		Intent moving = new Intent(this, RandExtractorAppActivity.class);
+		Intent moving = new Intent(this, RandExtractorActivity.class);
 		startActivity(moving);
 	}
 	
@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
 	 * @param view
 	 */
 	public void moveToPublicKeyCryptographyAppActivity(View view) {
-		Intent moving = new Intent(this, LongTermKeyAppActivity.class);
+		Intent moving = new Intent(this, LongTermKeyActivity.class);
 		startActivity(moving);
 	}
 }

@@ -67,7 +67,7 @@ public class AugotGKA implements GKAProtocol {
 			
 			initialized = true;
 			
-			initRun();
+			//initRun();
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		} catch (SAXException e) {
@@ -137,6 +137,7 @@ public class AugotGKA implements GKAProtocol {
 			PMessage response = preCreateMessage(message);
 			GKAProtocolRound round = null;
 			
+			Log.d("roundNo", message.getRoundNo()+" ");
 			switch (message.getRoundNo()) {
 			
 				// get first server round - init round
@@ -596,6 +597,7 @@ public class AugotGKA implements GKAProtocol {
 	 */
 	private byte[] generateNonce() {
 		byte[] nonce = new byte[gkaProtocolParams.getNonceLength()];
+		Log.d("nonce length", gkaProtocolParams.getNonceLength()+" ");
 		secureRandom.nextBytes(nonce);
 		participants.getMe().setNonce(nonce);
 
@@ -615,6 +617,7 @@ public class AugotGKA implements GKAProtocol {
 		
 		// generate random secret
 		byte[] secretBytes = new byte[secretLength];
+		Log.d("secret length", secretLength+" ");
 		secureRandom.nextBytes(secretBytes);
 		secret = new BigInteger(1, secretBytes).mod(q);
 		

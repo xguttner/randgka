@@ -7,7 +7,7 @@ public class UHRandExtractorParams {
 
 	private static TreeMap<Integer, Integer> lengths;
 	private static boolean isSet = false;
-	public static final int MAXIMAL_OUTPUT = 2161,
+	public static final int MAXIMAL_OUTPUT = 2160,
 							MAXIMAL_INPUT = 2447;
 	
 	/**
@@ -15,10 +15,12 @@ public class UHRandExtractorParams {
 	 */
 	private static void setLengths() {
 		lengths = new TreeMap<Integer, Integer>();
-		lengths.put(162, 347);
-		lengths.put(276, 467);
-		lengths.put(516, 719);
-		lengths.put(1053, 1283);
+		lengths.put(47, 227);
+		lengths.put(81, 263);
+		lengths.put(161, 347);
+		lengths.put(275, 467);
+		lengths.put(515, 719);
+		lengths.put(1052, 1283);
 		lengths.put(MAXIMAL_OUTPUT, MAXIMAL_INPUT);
 	}
 	

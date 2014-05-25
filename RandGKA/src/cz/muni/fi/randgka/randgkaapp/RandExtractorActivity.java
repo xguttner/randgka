@@ -28,7 +28,7 @@ import android.widget.TextView;
 /**
  * Activity enabling access to the randomness extractor output.
  */
-public class RandExtractorAppActivity extends Activity {
+public class RandExtractorActivity extends Activity {
 	
 	private TextView otv;
 	private EditText ofet,
