@@ -157,17 +157,21 @@ public class WifiCommunicationService extends Service {
 				} 
 				// after camera preview has been set, we can utilize it in randomness retrieval
 				else if (action.equals(Constants.SET_SECURE_RANDOM)) {
-					if (entropySourceString.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
-				    else secureRandom = new SecureRandom();
-					longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+					if (pHandler == null) {
+				    	Intent finishGKAActivity = new Intent(GKAActivity.NOT_ACTIVE);
+				    	if (lbm == null) lbm = LocalBroadcastManager.getInstance(this);
+				    	lbm.sendBroadcast(finishGKAActivity);
+				    } else {
+				    	if (entropySourceString.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+					    else secureRandom = new SecureRandom();
+					    longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+				    }
 				}
 				// protocol run invocation (by leader)
 				else if (action.equals(Constants.GKA_RUN)) {
 					if (participants != null && !protocolRunning) {
 						protocolRunning = true;
 						initRun(intent);
-						
-						if (listenSocketThread != null) listenSocketThread.interrupt();
 						
 						// get the source of modp group parameters
 						AssetManager am = getAssets();

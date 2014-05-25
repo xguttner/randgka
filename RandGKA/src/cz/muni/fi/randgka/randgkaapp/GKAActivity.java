@@ -3,7 +3,6 @@ package cz.muni.fi.randgka.randgkaapp;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import cz.muni.fi.randgka.bluetoothgka.BluetoothCommunicationService;
 import cz.muni.fi.randgka.gka.GKAParticipant;
@@ -21,7 +20,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -73,7 +71,8 @@ public class GKAActivity extends Activity {
 			GET_PARAMS = "get_params", // print params
 			PRINT_DEVICE = "print_device", // print new device (leader only)
 			RETRIEVE_GKA_KEY = "show_retrieve_key", // retrieve gka key
-			PRINT_GKA_KEY = "get_gka_key"; // print gka key
+			PRINT_GKA_KEY = "get_gka_key", // print gka key
+	 		NOT_ACTIVE = "not_active";
 	
 	private BroadcastReceiver br;
 	private LocalBroadcastManager lbm;
@@ -83,7 +82,7 @@ public class GKAActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		
 		// if is leader: print the spinner to choose parameters + run protocol button to start protocol
-		if (this.getIntent().getBooleanExtra("isLeader", false)) {
+		if (this.getIntent().getBooleanExtra(Constants.IS_LEADER, false)) {
 			setContentView(R.layout.activity_gkaprotocol);
 			
 			ArrayAdapter<Integer> nonceLengths = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item);
@@ -128,6 +127,65 @@ public class GKAActivity extends Activity {
 		protocolParticipantsTV = (TextView)findViewById(R.id.textView13);
 		gkaTV = (TextView)findViewById(R.id.textView11);		
 		
+		technology = getIntent().getStringExtra(Constants.TECHNOLOGY);
+		
+		// obtain camera source of randomness objects needed for randomness provider
+		SurfaceView surface = null;
+		surface=(SurfaceView)findViewById(R.id.surfaceView1);
+        SurfaceHolder holder=surface.getHolder();
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        
+        CameraMES cameraMES = new CameraMES();
+        cameraMES.initialize(surface);
+        CameraMESHolder.cameraMES = cameraMES;
+        
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.empty, menu);
+		return true;
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		registerCustomReceiver();
+		
+		// after the preview screen is created, we can register the secure random object utilizing it
+        Intent setSecureRandom = new Intent(this, technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.class : BluetoothCommunicationService.class);
+        setSecureRandom.setAction(Constants.SET_SECURE_RANDOM);
+        startService(setSecureRandom);
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		clean();
+	}
+	
+	private void clean() {
+		if (CameraMESHolder.cameraMES != null) {
+			CameraMESHolder.cameraMES.stop();
+			CameraMESHolder.cameraMES = null;
+		}
+		
+		// stop the communication threads
+		if (technology.equals(Constants.BLUETOOTH_GKA)) {
+			Intent stopThreads = new Intent(this, BluetoothCommunicationService.class);
+			stopThreads.setAction(Constants.STOP);
+			startService(stopThreads);
+		} else if (technology.equals(Constants.WIFI_GKA)) {
+			Intent stopThreads = new Intent(this, WifiCommunicationService.class);
+			stopThreads.setAction(Constants.STOP);
+			startService(stopThreads);
+		}
+		
+		if (br != null) lbm.unregisterReceiver(br);
+	}
+
+	private void registerCustomReceiver() {
+
 		// register new Broadcast receiver to enable the user interaction
 		IntentFilter returnKeyFilter = new IntentFilter();
 		returnKeyFilter.addAction(RETRIEVE_GKA_KEY);
@@ -135,6 +193,7 @@ public class GKAActivity extends Activity {
 		returnKeyFilter.addAction(PRINT_GKA_KEY);
 		returnKeyFilter.addAction(GET_PARAMS);
 		returnKeyFilter.addAction(PRINT_DEVICE);
+		returnKeyFilter.addAction(NOT_ACTIVE);
 		br = new BroadcastReceiver() {
 			
 			/**
@@ -204,67 +263,16 @@ public class GKAActivity extends Activity {
 				else if (intent.getAction().equals(PRINT_DEVICE)) {
 					protocolParticipantsTV.append(intent.getStringExtra(Constants.DEVICE)+"\n");
 				}
+				// communication service is not in an active state
+				else if (intent.getAction().equals(NOT_ACTIVE)) {
+					finish();
+				}
 			}
 		};
 		lbm = LocalBroadcastManager.getInstance(this);
 		lbm.registerReceiver(br, returnKeyFilter);
-		
-		technology = getIntent().getStringExtra(Constants.TECHNOLOGY);
-		
-		// obtain camera source of randomness objects needed for randomness provider
-		SurfaceView surface = null;
-		surface=(SurfaceView)findViewById(R.id.surfaceView1);
-        SurfaceHolder holder=surface.getHolder();
-        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        
-        CameraMES cameraMES = new CameraMES();
-        cameraMES.initialize(surface);
-        CameraMESHolder.cameraMES = cameraMES;
-        
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.empty, menu);
-		return true;
 	}
 	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		
-		// after the preview screen is created, we can register the secure random object utilizing it
-        Intent setSecureRandom = new Intent(this, technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.class : BluetoothCommunicationService.class);
-        setSecureRandom.setAction(Constants.SET_SECURE_RANDOM);
-        startService(setSecureRandom);
-	}
-	
-	@Override
-	protected void onStop() {
-		super.onStop();
-		clean();
-	}
-	
-	private void clean() {
-		if (CameraMESHolder.cameraMES != null) {
-			CameraMESHolder.cameraMES.stop();
-			CameraMESHolder.cameraMES = null;
-		}
-		
-		// stop the communication threads
-		if (technology.equals(Constants.BLUETOOTH_GKA)) {
-			Intent stopThreads = new Intent(this, BluetoothCommunicationService.class);
-			stopThreads.setAction(Constants.STOP);
-			startService(stopThreads);
-		} else if (technology.equals(Constants.WIFI_GKA)) {
-			Intent stopThreads = new Intent(this, WifiCommunicationService.class);
-			stopThreads.setAction(Constants.STOP);
-			startService(stopThreads);
-		}
-		
-		if (br != null) lbm.unregisterReceiver(br);
-	}
-
 	/**
 	 * Start by the retrieve key button click.
 	 * Returns the key to the calling application.

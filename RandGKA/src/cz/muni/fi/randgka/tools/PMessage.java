@@ -18,12 +18,15 @@ import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
 
+/**
+ * Transport object of the protocol messages over the communication channels.
+ */
 public class PMessage implements Serializable {
 	
 	private static final long serialVersionUID = 7176163014773441688L;
 
+	// the basic length of message stored in byte array
 	private static final int STATIC_LENGTH = 14;
-	private static String signAlg = "SHA256withRSA";
 	
 	private byte roundNo;
 	private int originatorId;
@@ -39,6 +42,7 @@ public class PMessage implements Serializable {
 	
 	public PMessage(byte[] pMessageInBytes) throws LengthsNotEqualException {
 		signed = false;
+		// obtain the message stored in byte array
 		fromBytes(pMessageInBytes);
 	}
 
@@ -52,16 +56,24 @@ public class PMessage implements Serializable {
 		this.signature = signature;
 	}
 
+	/**
+	 * Set parameters to the Message object
+	 * 
+	 * @param message
+	 * @return
+	 */
 	public Message obtainMessage(Message message) {
-		
 		Bundle pMessageBundle = new Bundle();
-        pMessageBundle.putSerializable("pMessage", this);
+        pMessageBundle.putSerializable(Constants.PMESSAGE, this);
 		
 		message.setData(pMessageBundle);
         
         return message;
 	}
 	
+	/**
+	 * @return byte array containing message without it signature
+	 */
 	private byte[] getBytesNoSignature() {
 		byte[] lengthBytes = ByteBuffer.allocate(4).putInt(length).array();
 		byte[] sigLengthBytes = ByteBuffer.allocate(4).putInt(sigLength).array();
@@ -82,6 +94,9 @@ public class PMessage implements Serializable {
 		return rv;
 	}
 	
+	/**
+	 * @return the whole message, including signature, if used
+	 */
 	public byte[] getBytes() {
 		byte[] rv = new byte[length()];
 		byte[] noSig = getBytesNoSignature();
@@ -197,65 +212,77 @@ public class PMessage implements Serializable {
 		return true;
 	}
 
+	/**
+	 * @return length of the PMessage object stored in byte array
+	 */
 	public int length() {
 		return length + STATIC_LENGTH + (signed?sigLength:0);
 	}
 
+	/**
+	 * Asset the object with the message parameters stored in the pMessageInBytes2 byte array
+	 * 
+	 * @param pMessageInBytes2
+	 * @throws LengthsNotEqualException
+	 */
 	public void fromBytes(byte[] pMessageInBytes2) throws LengthsNotEqualException {
 		if (pMessageInBytes2 != null) {
-		byte[] pMessageInBytes = Base64.decode(pMessageInBytes2, Base64.DEFAULT);
-		roundNo = pMessageInBytes[0];
-		if (pMessageInBytes.length  > 740) {
-			ByteArrayOutputStream bs = new ByteArrayOutputStream();
-			String s = "";
-			for (int i = 700; i < pMessageInBytes.length; i++) {
-				s += ", "+pMessageInBytes[i];
+			
+			// decode
+			byte[] pMessageInBytes = Base64.decode(pMessageInBytes2, Base64.DEFAULT);
+			
+			// determine round number
+			roundNo = pMessageInBytes[0];
+			
+			// get the originator id
+			byte[] originatorIdBytes = new byte[4];
+			System.arraycopy(pMessageInBytes, 1, originatorIdBytes, 0, 4);
+			originatorId = ByteBuffer.wrap(originatorIdBytes).getInt();
+			
+			// get the length of the inner message
+			byte[] lengthBytes = new byte[4];
+			System.arraycopy(pMessageInBytes, 5, lengthBytes, 0, 4);
+			length = ByteBuffer.wrap(lengthBytes).getInt();
+			
+			// get the length of the signature
+			byte[] sigLengthBytes = new byte[4];
+			System.arraycopy(pMessageInBytes, 9, sigLengthBytes, 0, 4);
+			sigLength = ByteBuffer.wrap(sigLengthBytes).getInt();
+			
+			// find out if the message is signed
+			signed = (pMessageInBytes[13] == (byte)1)?true:false;
+			
+			// obtain the inner message
+			if (pMessageInBytes.length-13 < length) throw new LengthsNotEqualException();
+			message = new byte[length];
+			System.arraycopy(pMessageInBytes, 14, message, 0, length);
+			
+			// obtain the signature
+			if (signed) {
+				signature = new byte[sigLength];
+				System.arraycopy(pMessageInBytes, length+14, signature, 0, sigLength);
 			}
-
-			Log.d("pMessageInBytes", s);
-			s = "";
-			for (int i = 700; i < pMessageInBytes2.length; i++) {
-				s += ", "+pMessageInBytes2[i];
-			}
-			Log.d("pMessageInBytes2", s);
-		}
-		byte[] originatorIdBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 1, originatorIdBytes, 0, 4);
-		originatorId = ByteBuffer.wrap(originatorIdBytes).getInt();
-		
-		byte[] lengthBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 5, lengthBytes, 0, 4);
-		length = ByteBuffer.wrap(lengthBytes).getInt();
-		
-		byte[] sigLengthBytes = new byte[4];
-		System.arraycopy(pMessageInBytes, 9, sigLengthBytes, 0, 4);
-		sigLength = ByteBuffer.wrap(sigLengthBytes).getInt();
-		
-		signed = (pMessageInBytes[13] == (byte)1)?true:false;
-		
-		if (pMessageInBytes.length-13 < length) throw new LengthsNotEqualException();
-		message = new byte[length];
-		System.arraycopy(pMessageInBytes, 14, message, 0, length);
-		
-		if (signed) {
-			signature = new byte[sigLength];
-			System.arraycopy(pMessageInBytes, length+14, signature, 0, sigLength);
-		}
 		}
 	}
 	
+	/**
+	 * Generate and set the current message signature using the nonces of the current protocol instance
+	 * 
+	 * @param privateKey
+	 * @param nonces
+	 * @param secureRandom
+	 * @param signLength
+	 */
 	public void selfSign(PrivateKey privateKey, byte[] nonces, SecureRandom secureRandom, int signLength) {
 		signed = true;
 		if (privateKey != null) {
 			try {
 				this.sigLength = signLength;
-				Log.d("signedby", Arrays.toString(nonces)+" "+Arrays.toString(getBytesNoSignature()));
-				Signature signature = Signature.getInstance(signAlg, "BC");
+				Signature signature = Signature.getInstance(Constants.SIGN_ALG, Constants.PREFFERED_CSP);
 			    signature.initSign(privateKey, secureRandom);
 			    signature.update(nonces);
 			    signature.update(getBytesNoSignature());
 			    this.signature = signature.sign();
-			    Log.d("signature", Arrays.toString(this.signature));
 			} catch (NoSuchAlgorithmException e) {
 				e.printStackTrace();
 			} catch (NoSuchProviderException e) {
@@ -268,17 +295,20 @@ public class PMessage implements Serializable {
 		}
 	}
 	
+	/**
+	 * Verify the message using also the nonces of the current protocol instance.
+	 * 
+	 * @param publicKey
+	 * @param nonces
+	 * @return true if the verification was successful, false otherwise
+	 */
 	public boolean selfVerify(PublicKey publicKey, byte[] nonces) {
 		try {
-			Log.d("verifiedby", Arrays.toString(nonces)+" "+Arrays.toString(getBytesNoSignature()));
-			
-			Signature signature = Signature.getInstance(signAlg, "BC");
+			Signature signature = Signature.getInstance(Constants.SIGN_ALG, Constants.PREFFERED_CSP);
 			signature.initVerify(publicKey);
 			signature.update(nonces);
 		    signature.update(getBytesNoSignature());
-		    Log.d("signature", Arrays.toString(this.signature));
 		    return signature.verify(this.signature);
-		    
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (NoSuchProviderException e) {

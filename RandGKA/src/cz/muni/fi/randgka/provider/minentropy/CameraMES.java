@@ -16,7 +16,6 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
 import android.os.Build;
 import android.os.Looper;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -256,7 +255,6 @@ public class CameraMES implements MinEntropySource, Callback, PreviewCallback, S
 	 * @return data from camera-source according to given parameters
 	 */
 	private ByteSequence getSourceData(int minEntropyDataLength, File storage, boolean preprocessingFlag) {
-		Log.d("memlen", minEntropyDataLength+" ");
 		// set values to be seen from onPreviewFrame method
 		this.sampleNumber = (int)Math.ceil((double)minEntropyDataLength/getBitsPerSample(preprocessingFlag));
 		this.preprocessingFlag = preprocessingFlag;

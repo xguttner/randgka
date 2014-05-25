@@ -42,7 +42,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 /**
  * Class utilizing the communication over the Bluetooth channel.
@@ -161,17 +160,21 @@ public class BluetoothCommunicationService extends Service {
 			} 
 			// after camera preview has been set, we can utilize it in randomness retrieval
 			else if (action.equals(Constants.SET_SECURE_RANDOM)) {
-			    if (entropySourceString.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
-			    else secureRandom = new SecureRandom();
-			    longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+			    if (pHandler == null) {
+			    	Intent finishGKAActivity = new Intent(GKAActivity.NOT_ACTIVE);
+			    	if (lbm == null) lbm = LocalBroadcastManager.getInstance(this);
+			    	lbm.sendBroadcast(finishGKAActivity);
+			    } else {
+			    	if (entropySourceString.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+				    else secureRandom = new SecureRandom();
+				    longTermKeyProvider = new LongTermKeyProvider(context, secureRandom);
+			    }
 			}
 			// protocol run invocation (by leader)
 			else if (action.equals(Constants.GKA_RUN)) {
 				if (participants != null && !protocolRunning) {
 					protocolRunning = true;
 					initRun(intent);
-					
-					if (listenSocketThread != null) listenSocketThread.interrupt();
 					
 					// get the source of modp group parameters
 					AssetManager am = getAssets();
@@ -481,7 +484,6 @@ public class BluetoothCommunicationService extends Service {
 			// after the successful connection, raise GKAActivity object to show the results to the member
 			Intent moving = new Intent(GKAMemberActivity.CONNECTED);
 			lbm.sendBroadcast(moving);
-			Log.d("broadcast sent", "ok");
         } catch (IOException e) {
         	e.printStackTrace();
         }

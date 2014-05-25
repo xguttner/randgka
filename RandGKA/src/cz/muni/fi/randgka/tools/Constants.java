@@ -1,5 +1,8 @@
 package cz.muni.fi.randgka.tools;
 
+/**
+ * Application shared constants.
+ */
 public final class Constants {
 	
 	public static final String RUN_GKA_PROTOCOL = "cz.muni.fi.androidrandextr.RUN_GKA_PROTOCOL";
@@ -86,4 +89,10 @@ public final class Constants {
 	public static final String NATIVE_ES = "native";
 
 	public static final String RAND_EXT_ES = "randomness extractor";
+	
+	public static final String SIGN_ALG = "SHA256withRSA";
+
+	public static final String PREFFERED_CSP = "BC";
+	
+	public static final String RSA = "RSA";
 }

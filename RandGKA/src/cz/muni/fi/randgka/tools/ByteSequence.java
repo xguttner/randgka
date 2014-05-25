@@ -1,10 +1,10 @@
 package cz.muni.fi.randgka.tools;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 
-import android.util.Log;
-
+/**
+ * Class for processing of long sequences of data.
+ */
 public class ByteSequence implements Serializable {
 	
 	private static final long serialVersionUID = -4124621094801727313L;
@@ -42,6 +42,14 @@ public class ByteSequence implements Serializable {
 		}
 	}
 	
+	/**
+	 * Scalar product of two sequences resulting in one bit b stored in a byte in a form 
+	 * 0000000b
+	 * 
+	 * @param seq2
+	 * @return 
+	 * @throws LengthsNotEqualException
+	 */
 	public byte scalarProduct(ByteSequence seq2) throws LengthsNotEqualException {
 		
 		if (this.bitLength != seq2.bitLength) throw new LengthsNotEqualException();
@@ -58,7 +66,7 @@ public class ByteSequence implements Serializable {
 	/**
 	 * adds new bit at the end of the bit string
 	 * 
-	 * @param bitCarryingByte in a form OOOOOOOb
+	 * @param bitCarryingByte in a form 0000000b
 	 */
 	public void addBit(byte bitCarryingByte) {
 		if (this.bitLength%8 == 0 && (this.bitLength+1)/8 == this.byteLength) {
@@ -77,6 +85,10 @@ public class ByteSequence implements Serializable {
 		this.bitLength++;
 	}
 	
+	/**
+	 * addition of seq2 to this sequence with respect to their bit lengths, without any gap between them
+	 * @param seq2
+	 */
 	public void add(ByteSequence seq2) {
 		if (seq2.getByteLength() > 0) {
 			int oldSequenceLength = this.byteLength;
@@ -104,8 +116,13 @@ public class ByteSequence implements Serializable {
 		return sequence;
 	}
 
+	/**
+	 * set bit length, allocate larger array if need be
+	 * 
+	 * @param bitLength
+	 */
 	public void setBitLength(int bitLength) {
-		int newByteLength = (int)(bitLength/8) + ((bitLength%8>0)?1:0);
+		int newByteLength = bitLength/8 + ((bitLength%8>0)?1:0);
 		if (this.bitLength == 0) {
 			this.sequence = new byte[newByteLength];
 		} else if (newByteLength > this.byteLength) {
@@ -115,8 +132,6 @@ public class ByteSequence implements Serializable {
 		}
 		this.byteLength = newByteLength;
 		this.bitLength = bitLength;
-		
-		//this.cleanLastBit(); solve - it makes the sequence to be only zeros
 	}
 	
 	public void setSequence(byte[] sequence) {
@@ -141,6 +156,9 @@ public class ByteSequence implements Serializable {
 		return bs;
 	}
 	
+	/**
+	 * set the unused bits of the last byte to be 0
+	 */
 	private void cleanLastByte() {
 		if (byteLength > 0) this.sequence[byteLength-1] = (byte)(this.sequence[byteLength-1] & (0xff << (8 - bitLength%8)));
 	}

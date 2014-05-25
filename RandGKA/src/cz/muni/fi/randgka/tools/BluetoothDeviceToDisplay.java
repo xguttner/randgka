@@ -2,6 +2,9 @@ package cz.muni.fi.randgka.tools;
 
 import android.bluetooth.BluetoothDevice;
 
+/**
+ * Class serving only to a user-friendly print of the Bluetooth device in a Spinner.
+ */
 public class BluetoothDeviceToDisplay {
 
 	private BluetoothDevice bluetoothDevice;

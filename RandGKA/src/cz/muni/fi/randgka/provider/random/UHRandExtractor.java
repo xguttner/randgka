@@ -3,7 +3,6 @@ package cz.muni.fi.randgka.provider.random;
 import java.security.SecureRandomSpi;
 import java.util.Map.Entry;
 
-import android.util.Log;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
 import cz.muni.fi.randgka.provider.minentropy.MinEntropySource;
 import cz.muni.fi.randgka.tools.ByteSequence;
