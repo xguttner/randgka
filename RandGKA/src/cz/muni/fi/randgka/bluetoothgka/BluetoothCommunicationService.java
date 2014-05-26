@@ -24,7 +24,6 @@ import cz.muni.fi.randgka.gka.GKAProtocolParams;
 import cz.muni.fi.randgka.gka.GKAProtocolRound;
 import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.randgkaapp.GKAActivity;
-import cz.muni.fi.randgka.randgkaapp.GKAMemberActivity;
 import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.LengthsNotEqualException;
 import cz.muni.fi.randgka.tools.PMessage;
@@ -159,7 +158,7 @@ public class BluetoothCommunicationService extends Service {
 				connectToServer((BluetoothDevice)intent.getParcelableExtra(Constants.DEVICE), this);
 			} 
 			// after camera preview has been set, we can utilize it in randomness retrieval
-			else if (action.equals(Constants.SET_SECURE_RANDOM)) {
+			else if (action.equals(Constants.SET_AVAILABLE_SOURCES)) {
 			    if (pHandler == null) {
 			    	Intent finishGKAActivity = new Intent(GKAActivity.NOT_ACTIVE);
 			    	if (lbm == null) lbm = LocalBroadcastManager.getInstance(this);
@@ -258,8 +257,11 @@ public class BluetoothCommunicationService extends Service {
 	 * @param retrieveKey - true if send back to the calling app, false if print
 	 */
 	private void getKey(boolean retrieveKey) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		bos.write(protocol.getKey().toByteArray(), (protocol.getKey().toByteArray().length > groupKeyLength)?1:0, groupKeyLength);
+		
 		Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.RETRIEVE_GKA_KEY : GKAActivity.PRINT_GKA_KEY);
-	    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
+	    printKeyIntent.putExtra(Constants.KEY, bos.toByteArray());
 	    lbm.sendBroadcast(printKeyIntent);
 	}
 	
@@ -482,7 +484,7 @@ public class BluetoothCommunicationService extends Service {
 			threads.put(me.getAddress(), null);
 			
 			// after the successful connection, raise GKAActivity object to show the results to the member
-			Intent moving = new Intent(GKAMemberActivity.CONNECTED);
+			Intent moving = new Intent(Constants.CONNECTED_TO_BLUETOOTH_SERVER);
 			lbm.sendBroadcast(moving);
         } catch (IOException e) {
         	e.printStackTrace();
@@ -547,7 +549,7 @@ public class BluetoothCommunicationService extends Service {
 	                // send the received message to the main thread
 	                Message m = pHandler.obtainMessage();
 	                Bundle pMessageBundle = new Bundle();
-	                pMessageBundle.putSerializable("pMessage", pMessage);
+	                pMessageBundle.putSerializable(Constants.PMESSAGE, pMessage);
 	        		m.setData(pMessageBundle);
 	                m.sendToTarget();
 

@@ -8,7 +8,6 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +33,9 @@ public class GKADecisionActivity extends Activity {
 	
 	private static final String LEADER = "Leader",
 			MEMBER = "Member";
+	
+	private static final int REQUEST_ENABLE_BT = 1785;
+	private static final int REQUEST_DISCOVERABLE_BT = 1786;
 	
 	// true - result key retrieval by another app, false otherwise
 	private boolean retrieveKey = false;
@@ -97,7 +99,7 @@ public class GKADecisionActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		
 		// Bluetooth enabling result
-		if (requestCode == Constants.REQUEST_ENABLE_BT) {
+		if (requestCode == REQUEST_ENABLE_BT) {
 			// Bluetooth not enabled - send to MainActivity
 			if (resultCode == RESULT_CANCELED) {
 				Intent backToMain = new Intent(this, MainActivity.class);
@@ -117,7 +119,7 @@ public class GKADecisionActivity extends Activity {
 			}
 		}
 		// wait for the leader to decide about discoverability and move to the GKAActivity
-		else if (requestCode == Constants.REQUEST_DISCOVERABLE_BT) {
+		else if (requestCode == REQUEST_DISCOVERABLE_BT) {
 			if (retrieveKey) startActivityForResult(moving, Constants.REQUEST_RETRIEVE_GKA_KEY);
 			else startActivity(moving);
 		} else if (requestCode == Constants.REQUEST_RETRIEVE_GKA_KEY) {
@@ -184,7 +186,7 @@ public class GKADecisionActivity extends Activity {
 	 * Ask for discoverability and start the leader run.
 	 */
 	private void leaderRun() {
-		startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), Constants.REQUEST_DISCOVERABLE_BT);
+		startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_DISCOVERABLE_BT);
 		
 		Intent commServiceIntent = new Intent(this, BluetoothCommunicationService.class);
 		commServiceIntent.setAction(Constants.LEADER_RUN);
@@ -222,7 +224,7 @@ public class GKADecisionActivity extends Activity {
 		}
 		if (!bluetoothAdapter.isEnabled()) {
 		    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-		    startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
+		    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 		} else return true;
 		
 		return false;

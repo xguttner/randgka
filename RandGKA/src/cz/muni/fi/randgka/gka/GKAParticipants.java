@@ -9,8 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import android.util.Log;
-
 /**
  * Class containing a List<GKAParticipant> to provide them to the GKAProtocol,
  *  and functions for their management.

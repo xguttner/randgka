@@ -9,8 +9,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
+import cz.muni.fi.randgka.tools.Constants;
 import android.util.Base64;
-import android.util.Log;
 
 /**
  * Class representing an instance of one protocol participant.
@@ -234,7 +234,7 @@ public class GKAParticipant {
 			if (pkEncLen > 0) {
 				byte[] pcBytes = new byte[pkEncLen];
 				System.arraycopy(bytes, 18+nameLen+nonceLen, pcBytes, 0, pkEncLen);
-				publicKey = KeyFactory.getInstance("RSA", "BC").generatePublic(new X509EncodedKeySpec(Base64.decode(pcBytes, Base64.DEFAULT)));
+				publicKey = KeyFactory.getInstance(Constants.RSA, Constants.PREFFERED_CSP).generatePublic(new X509EncodedKeySpec(Base64.decode(pcBytes, Base64.DEFAULT)));
 			}
 		} catch (InvalidKeySpecException e) {
 			e.printStackTrace();

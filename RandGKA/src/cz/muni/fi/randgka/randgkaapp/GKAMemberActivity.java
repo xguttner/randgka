@@ -43,8 +43,6 @@ public class GKAMemberActivity extends Activity {
 	
 	private LocalBroadcastManager lbm;
 	
-	public static final String CONNECTED = "connected";
-	
 	private String entropySource;
 	
 	@Override
@@ -69,7 +67,7 @@ public class GKAMemberActivity extends Activity {
 		// register BroadcastReceiver for the "new bluetooth device found" action
 		IntentFilter deviceFound = new IntentFilter();
 		deviceFound.addAction(BluetoothDevice.ACTION_FOUND);
-		deviceFound.addAction(GKAMemberActivity.CONNECTED);
+		deviceFound.addAction(Constants.CONNECTED_TO_BLUETOOTH_SERVER);
 		discoveryBR = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -87,8 +85,8 @@ public class GKAMemberActivity extends Activity {
 		            	devicesSpinner.setAdapter(devices);
 		            }
 		        }
-		        // successfully connected - 
-		        else if (action.equals(GKAMemberActivity.CONNECTED)) {
+		        // successfully connected
+		        else if (action.equals(Constants.CONNECTED_TO_BLUETOOTH_SERVER)) {
 		        	Intent moving = new Intent(context, GKAActivity.class);
 					moving.putExtra(Constants.RETRIEVE_KEY, retrieveKey);
 					moving.putExtra(Constants.TECHNOLOGY, Constants.BLUETOOTH_GKA);

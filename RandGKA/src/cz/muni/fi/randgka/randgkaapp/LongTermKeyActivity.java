@@ -2,12 +2,12 @@ package cz.muni.fi.randgka.randgkaapp;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Provider;
 import java.security.SecureRandom;
 
 import cz.muni.fi.randgka.provider.RandGKAProvider;
 import cz.muni.fi.randgka.provider.minentropy.CameraMES;
 import cz.muni.fi.randgka.provider.minentropy.CameraMESHolder;
+import cz.muni.fi.randgka.tools.Constants;
 import cz.muni.fi.randgka.tools.LongTermKeyProvider;
 import cz.muni.fi.randgkaapp.R;
 import android.os.Bundle;
@@ -28,9 +28,6 @@ public class LongTermKeyActivity extends Activity {
 		entropySourceSpinner;
 	private TextView otv;
 	
-	private static final String NATIVE_ES = "native",
-			RAND_EXT_ES = "randomness extractor";
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -43,8 +40,8 @@ public class LongTermKeyActivity extends Activity {
 		
 		ArrayAdapter<String> entropySources = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
 		entropySources.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		entropySources.add(NATIVE_ES);
-		entropySources.add(RAND_EXT_ES);
+		entropySources.add(Constants.NATIVE_ES);
+		entropySources.add(Constants.RAND_EXT_ES);
 		entropySourceSpinner = (Spinner)findViewById(R.id.spinner2);
 		entropySourceSpinner.setAdapter(entropySources);
 		
@@ -97,9 +94,9 @@ public class LongTermKeyActivity extends Activity {
 		SecureRandom secureRandom = null;
 		try {
 			// native randomness source
-			if (entropySourceS.equals(NATIVE_ES)) secureRandom = new SecureRandom();
+			if (entropySourceS.equals(Constants.NATIVE_ES)) secureRandom = new SecureRandom();
 			// use designed randomness extractor with camera entropy source
-			else if (entropySourceS.equals(RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
+			else if (entropySourceS.equals(Constants.RAND_EXT_ES)) secureRandom = SecureRandom.getInstance(RandGKAProvider.RAND_EXTRACTOR, new RandGKAProvider());
 			
 			// generate key-pair
 			LongTermKeyProvider longTermKeyProvider = new LongTermKeyProvider(this, secureRandom);

@@ -82,6 +82,8 @@ public class WifiCommunicationService extends Service {
 
 		private String entropySourceString;
 		
+		private static final int WIFI_PORT = 6540;
+		
 		@Override
 		public void onCreate() {}
 		
@@ -156,7 +158,7 @@ public class WifiCommunicationService extends Service {
 					connectToServer(this);
 				} 
 				// after camera preview has been set, we can utilize it in randomness retrieval
-				else if (action.equals(Constants.SET_SECURE_RANDOM)) {
+				else if (action.equals(Constants.SET_AVAILABLE_SOURCES)) {
 					if (pHandler == null) {
 				    	Intent finishGKAActivity = new Intent(GKAActivity.NOT_ACTIVE);
 				    	if (lbm == null) lbm = LocalBroadcastManager.getInstance(this);
@@ -254,8 +256,11 @@ public class WifiCommunicationService extends Service {
 		 * @param retrieveKey - true if send back to the calling app, false if print
 		 */
 		private void getKey(boolean retrieveKey) {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			bos.write(protocol.getKey().toByteArray(), (protocol.getKey().toByteArray().length > groupKeyLength)?1:0, groupKeyLength);
+			
 			Intent printKeyIntent = new Intent(retrieveKey ? GKAActivity.RETRIEVE_GKA_KEY : GKAActivity.PRINT_GKA_KEY);
-		    printKeyIntent.putExtra(Constants.KEY, protocol.getKey().toByteArray());
+		    printKeyIntent.putExtra(Constants.KEY, bos.toByteArray());
 		    lbm.sendBroadcast(printKeyIntent);
 		}
 		
@@ -382,7 +387,7 @@ public class WifiCommunicationService extends Service {
 			if (listenSocketThread == null || !listenSocketThread.isAlive()) {
 				ss = new ServerSocket();
 				ss.setReuseAddress(true);
-				ss.bind(new InetSocketAddress(addr, Constants.WIFI_PORT));
+				ss.bind(new InetSocketAddress(addr, WIFI_PORT));
 					
 				listenSocketThread = new Thread(new ListenSocketThread(ss));
 				listenSocketThread.start();
@@ -481,7 +486,7 @@ public class WifiCommunicationService extends Service {
 							byte[] iaBytes = new byte[]{myAddr.getAddress()[0], myAddr.getAddress()[1], myAddr.getAddress()[2], (byte)1};
 							InetAddress ia = InetAddress.getByAddress(iaBytes);
 							
-							Socket s = new Socket(ia, Constants.WIFI_PORT);
+							Socket s = new Socket(ia, WIFI_PORT);
 							
 					        // invoke communication thread
 					        CommunicationThread ct = new CommunicationThread(s);
@@ -568,7 +573,7 @@ public class WifiCommunicationService extends Service {
 		                // send the received message to the main thread
 		                Message m = pHandler.obtainMessage();
 		                Bundle pMessageBundle = new Bundle();
-		                pMessageBundle.putSerializable("pMessage", pMessage);
+		                pMessageBundle.putSerializable(Constants.PMESSAGE, pMessage);
 		        		m.setData(pMessageBundle);
 		                m.sendToTarget();
 

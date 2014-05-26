@@ -1,6 +1,5 @@
 package cz.muni.fi.randgka.tools;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
@@ -16,7 +15,6 @@ import java.util.Arrays;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Base64;
-import android.util.Log;
 
 /**
  * Transport object of the protocol messages over the communication channels.

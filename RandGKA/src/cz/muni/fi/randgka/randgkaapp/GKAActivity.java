@@ -72,7 +72,7 @@ public class GKAActivity extends Activity {
 			PRINT_DEVICE = "print_device", // print new device (leader only)
 			RETRIEVE_GKA_KEY = "show_retrieve_key", // retrieve gka key
 			PRINT_GKA_KEY = "get_gka_key", // print gka key
-	 		NOT_ACTIVE = "not_active";
+	 		NOT_ACTIVE = "not_active"; // service does not currently provide needed variables and needs to be reset
 	
 	private BroadcastReceiver br;
 	private LocalBroadcastManager lbm;
@@ -117,7 +117,7 @@ public class GKAActivity extends Activity {
 			publicKeyLengthTV = (TextView)findViewById(R.id.textView10);
 		}
 		
-		technology = getIntent().getStringExtra("technology");
+		technology = getIntent().getStringExtra(Constants.TECHNOLOGY);
 		
 		// get and hide the retrieve button
 		retrieveButton = (Button)findViewById(R.id.button2);
@@ -154,7 +154,7 @@ public class GKAActivity extends Activity {
 		
 		// after the preview screen is created, we can register the secure random object utilizing it
         Intent setSecureRandom = new Intent(this, technology.equals(Constants.WIFI_GKA) ? WifiCommunicationService.class : BluetoothCommunicationService.class);
-        setSecureRandom.setAction(Constants.SET_SECURE_RANDOM);
+        setSecureRandom.setAction(Constants.SET_AVAILABLE_SOURCES);
         startService(setSecureRandom);
 	}
 	
@@ -204,7 +204,7 @@ public class GKAActivity extends Activity {
 			private void printKey(byte[] key) {
 				if (gkaTV != null) {
 					gkaTV.setText("");
-					gkaTV.append((new BigInteger(key)).toString(16));
+					gkaTV.append((new BigInteger(1, key)).toString(16));
 				}
 			}
 			
@@ -228,7 +228,7 @@ public class GKAActivity extends Activity {
 							if (g.getPublicKey()!=null) {
 								try {
 									// nonce + key message digest
-									MessageDigest md = MessageDigest.getInstance("SHA-256");
+									MessageDigest md = MessageDigest.getInstance(Constants.HASH_ALG);
 									md.update(g.getNonce());
 									protocolParticipantsTV.append("\nAuthentication hash: " + (new BigInteger(1, md.digest(g.getPublicKey().getEncoded())).toString(16)));
 								} catch (NoSuchAlgorithmException e) {
@@ -241,12 +241,12 @@ public class GKAActivity extends Activity {
 				} 
 				// print params
 				else if (intent.getAction().equals(GET_PARAMS)) {
-					String version = intent.getIntExtra("version", 0) != GKAProtocolParams.NON_AUTH ? 
-							(intent.getIntExtra("version", 1) == GKAProtocolParams.AUTH_CONF ? 
+					String version = intent.getIntExtra(Constants.VERSION, 0) != GKAProtocolParams.NON_AUTH ? 
+							(intent.getIntExtra(Constants.VERSION, 1) == GKAProtocolParams.AUTH_CONF ? 
 									"Authenticated + key confirmation" : "Authenticated") : "Non-authenticated";
-					String nonceLength = String.valueOf(intent.getIntExtra("nonceLength", 0)*8);
-					String groupKeyLength = String.valueOf(intent.getIntExtra("groupKeyLength", 0)*8);
-					String publicKeyLength = String.valueOf(intent.getIntExtra("publicKeyLength", 0)*8);
+					String nonceLength = String.valueOf(intent.getIntExtra(Constants.NONCE_LENGTH, 0)*8);
+					String groupKeyLength = String.valueOf(intent.getIntExtra(Constants.GROUP_KEY_LENGTH, 0)*8);
+					String publicKeyLength = String.valueOf(intent.getIntExtra(Constants.PUBLIC_KEY_LENGTH, 0)*8);
 					
 					versionTV.setText(version);
 					nonceLengthTV.setText(nonceLength);
@@ -301,10 +301,10 @@ public class GKAActivity extends Activity {
 		
 		// preset the new intent
 		Intent commServiceIntent = new Intent();
-		commServiceIntent.putExtra("nonceLength", nonceLength);
-		commServiceIntent.putExtra("groupKeyLength", groupKeyLength);
-		commServiceIntent.putExtra("publicKeyLength", publicKeyLength);
-		commServiceIntent.putExtra("version", authRadio.isChecked()?1:(authConfRadio.isChecked()?2:0));
+		commServiceIntent.putExtra(Constants.NONCE_LENGTH, nonceLength);
+		commServiceIntent.putExtra(Constants.GROUP_KEY_LENGTH, groupKeyLength);
+		commServiceIntent.putExtra(Constants.PUBLIC_KEY_LENGTH, publicKeyLength);
+		commServiceIntent.putExtra(Constants.VERSION, authRadio.isChecked()?1:(authConfRadio.isChecked()?2:0));
 		commServiceIntent.putExtra(Constants.RETRIEVE_KEY, getIntent().getBooleanExtra(Constants.RETRIEVE_KEY, false));
 		
 		// run protocol using the appropriate technology
